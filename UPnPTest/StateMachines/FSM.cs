@@ -4,15 +4,22 @@
     }
 
     //// finite state machine
-    abstract class FSM<TContext> : IStateMachine<TContext> {
-        public IState<TContext, IStateMachine<TContext>> CurrentState { get; protected set; }
+    abstract class FSM<TContext, TState> : IStateMachine<TContext> 
+        where TState : IState<TContext> {
+        public TState CurrentState { get; set; }
+
+        public void Enter() {
+            CurrentState.StateMachine = this;
+            CurrentState.Enter(default(TContext));
+        }
 
         public void Update(TContext context, IStateMachine<TContext> machine) {
-            IState<TContext, IStateMachine<TContext>> updateResult = CurrentState.Update(context, machine);
+            IState<TContext> updateResult = CurrentState.Update(context);
             if (updateResult != null) {
-                CurrentState.Exit(context, machine);
-                updateResult.Enter(context, machine);
-                CurrentState = updateResult;
+                CurrentState.Exit(context);
+                updateResult.StateMachine = this;
+                updateResult.Enter(context);
+                CurrentState = (TState)updateResult;
             }
         }
     }

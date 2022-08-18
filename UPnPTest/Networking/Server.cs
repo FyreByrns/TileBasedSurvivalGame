@@ -84,7 +84,7 @@ namespace TileBasedSurvivalGame.Networking {
             }
         }
 
-        void Respond(NetMessage originalMessage, NetMessage response) {
+        public void Respond(NetMessage originalMessage, NetMessage response) {
             Task.Run(() => {
                 _udpClient.SendAsync(response.RawData, response.RawData.Length, originalMessage.Sender);
             });

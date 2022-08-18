@@ -24,25 +24,27 @@ namespace TileBasedSurvivalGame.StateMachines.ServerState {
         }
 
         private void Server_MessageReceived(NetMessage message) {
-            Update(message);
+            Update(message, this);
         }
     }
 
     abstract class SS_ConnectionState
-    : IState<NetMessage, SCM, SS_ConnectionState> {
-        public virtual void Enter(NetMessage context, SCM machine) { }
-        public virtual IState<NetMessage, SCM> Update(NetMessage context, SCM machine) { return null; }
-        public virtual void Exit(NetMessage context, SCM machine) { }
+    : IState<NetMessage> {
+        public IStateMachine<NetMessage> StateMachine { get; set; }
+
+        public virtual void Enter(NetMessage context) { }
+        public virtual IState<NetMessage> Update(NetMessage context) { return null; }
+        public virtual void Exit(NetMessage context) { }
     }
 
     class InitiatingConnection 
         : SS_ConnectionState {
-        public override IState<NetMessage, SCM> Update(NetMessage context, SCM machine) {
+        public override IState<NetMessage> Update(NetMessage context) {
             if(context.MessageIntent == RequestDesiredName) {
                 // figure out if the name is allowed
                 string requestedName = context.RawData.Get<string>();
                 if (ReservedWords.WordIsAllowed(requestedName)) {
-                    machine.Server.Respond(context, NetMessage.ConstructToSend(AllowConnection));
+                    ((SCM)StateMachine).Server.Respond(context, NetMessage.ConstructToSend(AllowConnection));
                 }
             }
 

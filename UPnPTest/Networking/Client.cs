@@ -6,13 +6,23 @@ using System.Threading.Tasks;
 //// = documentation
 // = per-step working comments
 
+using TileBasedSurvivalGame.StateMachines.ClientsideConnectionState;
 
 namespace TileBasedSurvivalGame.Networking {
     class Client : Game {
         public event NetMessageEventHandler MessageReceived;
         public IPAddress ServerAddress { get; }
         public int ServerPort { get; }
+        ClientsideConnectionStateMachine _connectionState;
         UdpClient _udpClient;
+
+        public string StringPopup(string query) {
+            // todo: actual popup
+            // for now, just console.readline
+            System.Console.WriteLine(query);
+            return
+                System.Console.ReadLine();
+        }
 
         void Listen() {
             while (true) {
@@ -50,6 +60,10 @@ namespace TileBasedSurvivalGame.Networking {
             _udpClient.Connect(new IPEndPoint(ServerAddress, ServerPort));
 
             Task.Run(() => { Listen(); });
+
+            _connectionState = new ClientsideConnectionStateMachine(this);
+            _connectionState.CurrentState = new InitiatingConnection();
+            _connectionState.Enter();
         }
     }
 }
