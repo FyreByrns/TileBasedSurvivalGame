@@ -64,7 +64,7 @@ namespace TileBasedSurvivalGame {
 
             Client client = new Client(serverAddress, port);
             // todo: load values from config files
-            client.Construct(400, 225, 4, 4);
+            client.Construct(400, 225, 2, 2);
             AddToWaitingActions(() => {
                 client.Start();
             });
