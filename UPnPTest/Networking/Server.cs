@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using System.Collections.Generic;
-using System.Reflection;
 
 using FSerialization;
 
@@ -12,113 +11,41 @@ using FSerialization;
 
 using PlayerID = System.Int32;
 using static TileBasedSurvivalGame.Networking.NetMessage.Intent;
+using TileBasedSurvivalGame.StateMachines.ServersideConnectionState;
+using TileBasedSurvivalGame.StateMachines.ServersideConnectionState.States;
 
 namespace TileBasedSurvivalGame.Networking {
-    //// to keep track of all reserved / disallowed words
-    static class ReservedWords {
-        public static string Unset { get; } = "[unset]";
-
-        //// whether a word is allowed
-        public static bool WordIsAllowed(string word) {
-            return !_reservedWords.Contains(word);
-        }
-
-        #region functionality
-        static List<string> _reservedWords = new List<string>();
-
-        public static bool IsWordReserved(string word) {
-            return _reservedWords.Contains(word);
-        }
-
-        static ReservedWords() {
-            // automagically get all string properties of this static class
-            // .. and add them to the reserved list
-            foreach (PropertyInfo propertyInfo in typeof(ReservedWords).GetProperties()) {
-                if (propertyInfo.PropertyType == typeof(string)) {
-                    _reservedWords.Add((string)propertyInfo.GetValue(null));
-                }
-            }
-        }
-        #endregion functionality
-    }
-
-    class Player {
-        public string Name { get; private set; }
-            = ReservedWords.Unset;
-        public bool HasName { get; private set; }
-    }
-
-    class LobbyData {
-        public Dictionary<PlayerID, Player> Players { get; }
-            = new Dictionary<PlayerID, Player>();
-
-        public void AddPlayer(PlayerID playerID, Player player) {
-            Players[playerID] = player;
-        }
-        public Player GetPlayer(PlayerID playerID) {
-            if (Players.ContainsKey(playerID)) {
-                return Players[playerID];
-            }
-            return null;
-        }
-    }
-
     class Server {
-        public event NetMessageEventHandler MessageReceived;
-        public int Port { get; }
-        UdpClient _udpClient;
         Random _rng;
 
         // lobby data
         LobbyData _lobbyData;
         Dictionary<PlayerID, IPEndPoint> _endpointsByID;
         Dictionary<IPEndPoint, PlayerID> _IDsByEndpoint;
-
-        void Listen() {
-            while (true) {
-                // wait for client connection
-                IPEndPoint sender = new IPEndPoint(IPAddress.Any, Port);
-                byte[] rcvData = _udpClient.Receive(ref sender);
-
-                OnReceive(NetMessage.ConstructFromSent(sender, rcvData));
-            }
-        }
+        Dictionary<PlayerID, ServersideConnectionStateMachine> _statesByID;
 
         public void Respond(NetMessage originalMessage, NetMessage response) {
-            Task.Run(() => {
-                _udpClient.SendAsync(response.RawData, response.RawData.Length, originalMessage.Sender);
-            });
+            NetHandler.SendTo(originalMessage.Sender, response);
         }
 
-        void OnReceive(NetMessage message) {
-            MessageReceived?.Invoke(message);
-        }
-
-        public void Start() {
-            // init random
+        public Server() {
             _rng = new Random((int)DateTime.Now.Ticks);
-
-            // create the client
-            _udpClient = new UdpClient(Port);
-            _lobbyData = new LobbyData();
+            NetHandler.ServerMessage += Server_MessageReceived;
 
             _endpointsByID = new Dictionary<PlayerID, IPEndPoint>();
             _IDsByEndpoint = new Dictionary<IPEndPoint, PlayerID>();
-
-            // start listening thread
-            Task.Run(Listen);
+            _lobbyData = new LobbyData();
+            _statesByID = new Dictionary<PlayerID, ServersideConnectionStateMachine>();
         }
 
         void RegisterNewClient(PlayerID playerID, IPEndPoint endpoint) {
             _endpointsByID[playerID] = endpoint;
             _IDsByEndpoint[endpoint] = playerID;
             _lobbyData.AddPlayer(playerID, new Player());
-        }
 
-        public Server(int port) {
-            Port = port;
-
-            MessageReceived += Server_MessageReceived;
+            _statesByID[playerID] = new ServersideConnectionStateMachine(this);
+            _statesByID[playerID].CurrentState = new InitiatingConnection();
+            _statesByID[playerID].Enter();
         }
 
         private void Server_MessageReceived(NetMessage message) {
@@ -130,6 +57,8 @@ namespace TileBasedSurvivalGame.Networking {
             // if the message is from a known client
             if (_IDsByEndpoint.ContainsKey(message.Sender)) {
                 // handle the message based on game state, intent, etc
+                _statesByID[_IDsByEndpoint[message.Sender]].Update(message, _statesByID[_IDsByEndpoint[message.Sender]]);
+                
                 switch (message.MessageIntent) {
                     case SendString:
                         break;

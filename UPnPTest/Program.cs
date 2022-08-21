@@ -18,29 +18,8 @@ namespace TileBasedSurvivalGame {
             //// one user will also be running a server in the background
             // ask in console if you are a session host
             bool hosting = Helper.Ask("Are you the session host?", false);
-
-            // if hosting, start the server
             if (hosting) {
-                // ask for a port
-                int hostingPort = Ask("What port would you like to use?", 18888);
-
-
-                // create the server and run in a thread once all init is done
-                AddToWaitingActions(() => {
-                    Server s = null;
-                    Task.Run(() => {
-                        try {
-                            s = new Server(hostingPort);
-
-                            // todo: load values from config files
-                            s.Start();
-                        }
-                        catch (Exception exception) {
-                            Console.WriteLine($"error in server task: {exception}");
-                            Console.WriteLine("server closed");
-                        }
-                    });
-                });
+                Server s = new Server();
             }
 
         // then, create the client and run it
@@ -62,15 +41,14 @@ namespace TileBasedSurvivalGame {
 
             int port = Ask("Enter server port.", 18888);
 
-            Client client = new Client(serverAddress, port);
+            Client client = new Client();
             // todo: load values from config files
             client.Construct(400, 225, 2, 2);
-            AddToWaitingActions(() => {
-                client.Start();
-            });
 
-            // post-init, run the client and the possible server
-            DoAllWaitingActions();
+            // setup network handler
+            NetHandler.Setup(serverAddress, port, true, hosting);
+            NetHandler.OnClientMessage(default(NetMessage)); // kickstart clientside state update
+            client.Start();
         }
     }
 }

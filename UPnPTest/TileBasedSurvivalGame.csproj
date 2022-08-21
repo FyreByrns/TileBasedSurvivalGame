@@ -47,14 +47,23 @@
     <Compile Include="Networking\Client.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="Networking\Intent.cs" />
+    <Compile Include="Networking\LobbyData.cs" />
     <Compile Include="Networking\NetMessage.cs" />
+    <Compile Include="Networking\NetHandler.cs" />
+    <Compile Include="Networking\Player.cs" />
+    <Compile Include="Networking\ReservedWords.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Networking\Server.cs" />
     <Compile Include="StateMachines\ClientState\ClientsideConnectionStateMachine.cs" />
+    <Compile Include="StateMachines\ClientState\States\CS_ConnectionState.cs" />
+    <Compile Include="StateMachines\ClientState\States\InitiatingConnection.cs" />
+    <Compile Include="StateMachines\ClientState\States\ResolvingName.cs" />
     <Compile Include="StateMachines\IState.cs" />
     <Compile Include="StateMachines\FSM.cs" />
+    <Compile Include="StateMachines\ServerState\States\InitiatingConnection.cs" />
     <Compile Include="StateMachines\ServerState\ServersideConnectionStateMachine.cs" />
+    <Compile Include="StateMachines\ServerState\States\SS_ConnectionState.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
