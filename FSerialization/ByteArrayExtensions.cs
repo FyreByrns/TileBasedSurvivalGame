@@ -99,7 +99,6 @@ namespace FSerialization {
                 }
             }
             else {
-                Console.WriteLine(typeof(T));
                 switch (StandardNameOf<T>()) {
                     case BYTE: {
                             me.AddBytes((byte)o);
