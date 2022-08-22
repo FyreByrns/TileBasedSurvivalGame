@@ -57,7 +57,8 @@ namespace TileBasedSurvivalGame.Networking {
                 && other.Blocked == Blocked;
         }
         public static bool operator ==(NetMessage lhs, NetMessage rhs) {
-            return lhs.Equals(rhs);
+            // hacky truthy-null
+            return lhs?.Equals(rhs) ?? (rhs?.Equals(lhs) ?? true);
         }
         public static bool operator !=(NetMessage lhs, NetMessage rhs) {
             return !(lhs == rhs);
@@ -66,6 +67,11 @@ namespace TileBasedSurvivalGame.Networking {
         #endregion operators
 
         #region static functionality
+
+        //// set the sender of a message (only for use with direct-piping)
+        public static void SetSender(ref NetMessage message, IPEndPoint newSender) {
+            message.Sender = newSender;
+        }
 
         //// construct a message with just intent
         static byte[] _emptyByteArray = new byte[] { };
