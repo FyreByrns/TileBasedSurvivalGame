@@ -81,6 +81,7 @@ namespace TileBasedSurvivalGame.Networking {
         //// construct a message with both intent and contents
         public static NetMessage ConstructToSend(Intent intent, byte[] data) {
             NetMessage result = new NetMessage();
+            result.MessageIntent = intent;
             // to send, only the raw data needed, no parsing of data
             // .. or sender info
             List<byte> rawDataBuf = new List<byte>();

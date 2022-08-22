@@ -8,6 +8,8 @@ namespace TileBasedSurvivalGame.StateMachines.ServersideConnectionState.States {
         : SS_ConnectionState {
         public override IState<NetMessage> Update(NetMessage context) {
             if (context.MessageIntent == RequestDesiredName) {
+                System.Console.WriteLine("client requesting name");
+
                 // figure out if the name is allowed
                 string requestedName = context.RawData.Get<string>();
                 if (ReservedWords.WordIsAllowed(requestedName)) {

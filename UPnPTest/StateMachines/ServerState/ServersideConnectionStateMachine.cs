@@ -18,6 +18,11 @@ namespace TileBasedSurvivalGame.StateMachines.ServersideConnectionState {
 
         public Server Server { get; }
 
+        public override void Update(NetMessage context, IStateMachine<NetMessage> machine) {
+            base.Update(context, machine);
+            Console.WriteLine($"current server state: {CurrentState}");
+        }
+
         public ServersideConnectionStateMachine(Server server) {
             Server = server;
         }

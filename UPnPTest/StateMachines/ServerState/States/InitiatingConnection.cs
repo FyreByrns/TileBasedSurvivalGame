@@ -11,6 +11,7 @@ namespace TileBasedSurvivalGame.StateMachines.ServersideConnectionState.States {
                 ((ServersideConnectionStateMachine)StateMachine)
                     .Server.Respond(context, NetMessage.ConstructToSend(AllowConnection));
 
+                System.Console.WriteLine("allowing client connection");
                 return new NegotiatingName();
             }
             return null;

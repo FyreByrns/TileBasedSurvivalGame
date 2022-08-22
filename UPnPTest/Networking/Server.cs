@@ -58,34 +58,11 @@ namespace TileBasedSurvivalGame.Networking {
             // if the message is from a known client
             if (_IDsByEndpoint.ContainsKey(message.Sender)) {
                 // handle the message based on game state, intent, etc
-                _statesByID[_IDsByEndpoint[message.Sender]].Update(message, _statesByID[_IDsByEndpoint[message.Sender]]);
+                Console.WriteLine($"[s] rcv msg from {message.Sender}[{_IDsByEndpoint[message.Sender]},{_IDsByEndpoint[message.Sender]}]");
+
+                _statesByID[_IDsByEndpoint[message.Sender]]
+                    .Update(message, _statesByID[_IDsByEndpoint[message.Sender]]);
                 
-                switch (message.MessageIntent) {
-                    case SendString:
-                        break;
-                    case SendNumber:
-                        break;
-
-                    case RequestDesiredName:
-                        // if the client requesting a name doesn't have a name ..
-                        if (!_lobbyData.GetPlayer(_IDsByEndpoint[message.Sender]).HasName) {
-                            // .. and the requested name is allowed
-                            string requestedName = message.RawData.Get<string>();
-                            if (ReservedWords.WordIsAllowed(requestedName)) {
-                                Respond(message,
-                                    NetMessage.ConstructToSend(AllowConnection));
-                            }
-                        }
-                        break;
-
-                    case RequestLobbyInfo:
-                        break;
-                    case RequestPlayerInfo:
-                        break;
-                    default:
-                        break;
-                }
-
                 // message is done with, read state may be cleared
                 message.RawData.Done();
             }

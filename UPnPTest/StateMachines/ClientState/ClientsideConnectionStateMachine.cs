@@ -10,7 +10,12 @@ namespace TileBasedSurvivalGame.StateMachines.ClientsideConnectionState {
         : FSM<NetMessage, States.CS_ConnectionState> {
         public Networking.Client Client { get; }
 
-        public ClientsideConnectionStateMachine(Networking.Client client) {
+        public override void Update(NetMessage context, IStateMachine<NetMessage> machine) {
+            base.Update(context, machine);
+            Console.WriteLine($"current client state: {CurrentState}");
+        }
+
+        public ClientsideConnectionStateMachine(Client client) {
             Client = client;
             NetHandler.ClientMessage += Client_MessageReceived;
         }

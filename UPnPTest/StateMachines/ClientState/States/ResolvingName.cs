@@ -17,12 +17,24 @@ namespace TileBasedSurvivalGame.StateMachines.ClientsideConnectionState.States {
             List<byte> data = new List<byte>();
             data.Append(name);
 
-            foreach(byte b in data) {
-                System.Console.Write((char)b);
-            }
-            System.Console.WriteLine();
-
             NetHandler.SendToServer(NetMessage.ConstructToSend(RequestDesiredName, data.ToArray()));
+        }
+
+        public override IState<NetMessage> Update(NetMessage context) {
+            if(context.MessageIntent == AllowConnection) {
+                return new InLobby();
+            }
+            if(context.MessageIntent == DenyDesiredName) {
+                return new ResolvingName();
+            }
+            return base.Update(context);
+        }
+    }
+
+    class InLobby
+        : CS_ConnectionState {
+        public override void Enter(NetMessage context) {
+            System.Console.WriteLine("reached lobby state!!!");
         }
     }
 }

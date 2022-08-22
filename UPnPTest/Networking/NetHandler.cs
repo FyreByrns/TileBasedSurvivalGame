@@ -35,6 +35,8 @@ namespace TileBasedSurvivalGame.Networking {
         }
 
         public static void SendTo(IPEndPoint target, NetMessage message) {
+
+#if EXCESSIVE_DEBUG_PRINTS
             foreach(byte b in message.RawData.Skip(sizeof(long))) {
                 Console.Write($"{b,4}");
             }
@@ -43,10 +45,14 @@ namespace TileBasedSurvivalGame.Networking {
                 Console.Write($"{(char)b,4}");
             }
             Console.WriteLine();
-            //for(int i = sizeof(long); i < message.RawData.Length; i += 4) {
-                //Console.Write($"{BitConverter.ToInt32(message.RawData, i),16}");
-            //}
-            //Console.WriteLine();
+#endif // EXCESSIVE_DEBUG_PRINTS
+
+            if (target.Equals(ClientEP)) {
+                Console.WriteLine($"s->c {message.MessageIntent}");
+            }
+            if (target.Equals(ServerEP)) {
+                Console.WriteLine($"c->s {message.MessageIntent}");
+            }
 
             // direct-pipe straight to client, if there's an integrated server
             if (HasClient && target.Equals(ClientEP)) {
@@ -56,7 +62,7 @@ namespace TileBasedSurvivalGame.Networking {
                 return;
             }
             // direct-pipe straight to integrated server
-            if(HasServer && target.Equals(ServerEP)) {
+            if (HasServer && target.Equals(ServerEP)) {
                 NetMessage.SetSender(ref message, ClientEP);
                 OnServerMessage(NetMessage.ConstructFromSent(ClientEP, message.RawData));
                 return;
@@ -144,7 +150,7 @@ namespace TileBasedSurvivalGame.Networking {
                 return;
             }
 
-            Console.WriteLine($"[{(message.Sender == ServerEP ? "s" : "c")}][{message.Sender}][{message.Latency.TotalMilliseconds}ms][{message.MessageIntent}]");
+            Console.WriteLine($"[{(message.Sender.Equals(ServerEP) ? "s" : "c")}][{message.Sender}][{message.Latency.TotalMilliseconds}ms][{message.MessageIntent}]");
         }
     }
 }
