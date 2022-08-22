@@ -63,6 +63,7 @@
     <Compile Include="StateMachines\FSM.cs" />
     <Compile Include="StateMachines\ServerState\States\InitiatingConnection.cs" />
     <Compile Include="StateMachines\ServerState\ServersideConnectionStateMachine.cs" />
+    <Compile Include="StateMachines\ServerState\States\NegotiatingName.cs" />
     <Compile Include="StateMachines\ServerState\States\SS_ConnectionState.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -7,15 +7,12 @@ namespace TileBasedSurvivalGame.StateMachines.ServersideConnectionState.States {
     class InitiatingConnection
         : SS_ConnectionState {
         public override IState<NetMessage> Update(NetMessage context) {
-            if (context.MessageIntent == RequestDesiredName) {
-                // figure out if the name is allowed
-                string requestedName = context.RawData.Get<string>();
-                if (ReservedWords.WordIsAllowed(requestedName)) {
-                    ((ServersideConnectionStateMachine)StateMachine)
-                        .Server.Respond(context, NetMessage.ConstructToSend(AllowConnection));
-                }
-            }
+            if (context.MessageIntent == RequestConnection) {
+                ((ServersideConnectionStateMachine)StateMachine)
+                    .Server.Respond(context, NetMessage.ConstructToSend(AllowConnection));
 
+                return new NegotiatingName();
+            }
             return null;
         }
     }

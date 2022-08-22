@@ -24,6 +24,10 @@ namespace TileBasedSurvivalGame.Networking {
         public override void OnUpdate(float elapsed) {
             base.OnUpdate(elapsed);
 
+            if (_connectionState.CurrentState.GetType() == typeof(InitiatingConnection)) {
+                //_connectionState.Update(default(NetMessage), _connectionState);
+            }
+
             Draw(MouseX, MouseY, Pixel.Presets.Lime);
 
             if (GetMouse(Mouse.Left).Pressed) {

@@ -35,10 +35,30 @@ namespace TileBasedSurvivalGame.Networking {
         }
 
         public static void SendTo(IPEndPoint target, NetMessage message) {
+            foreach(byte b in message.RawData.Skip(sizeof(long))) {
+                Console.Write($"{b,4}");
+            }
+            Console.WriteLine();
+            foreach(byte b in message.RawData.Skip(sizeof(long))) {
+                Console.Write($"{(char)b,4}");
+            }
+            Console.WriteLine();
+            //for(int i = sizeof(long); i < message.RawData.Length; i += 4) {
+                //Console.Write($"{BitConverter.ToInt32(message.RawData, i),16}");
+            //}
+            //Console.WriteLine();
+
             // direct-pipe straight to client, if there's an integrated server
-            if(HasClient && target == ClientEP) {
+            if (HasClient && target.Equals(ClientEP)) {
                 NetMessage.SetSender(ref message, ServerEP);
-                OnClientMessage(message);
+                Console.WriteLine(message.MessageIntent);
+                OnClientMessage(NetMessage.ConstructFromSent(ServerEP, message.RawData));
+                return;
+            }
+            // direct-pipe straight to integrated server
+            if(HasServer && target.Equals(ServerEP)) {
+                NetMessage.SetSender(ref message, ClientEP);
+                OnServerMessage(NetMessage.ConstructFromSent(ClientEP, message.RawData));
                 return;
             }
 
@@ -59,13 +79,6 @@ namespace TileBasedSurvivalGame.Networking {
         }
 
         public static void SendToServer(NetMessage message) {
-            // direct-pipe straight to integrated server
-            if (HasServer) {
-                NetMessage.SetSender(ref message, ClientEP);
-                OnServerMessage(message);
-                return;
-            }
-
             SendTo(ServerEP, message);
         }
 
@@ -131,7 +144,7 @@ namespace TileBasedSurvivalGame.Networking {
                 return;
             }
 
-            Console.WriteLine($"[{(message.Sender == ServerEP ? "s" : "c")}][{message.Sender}][{message.Latency.TotalMilliseconds}ms]");
+            Console.WriteLine($"[{(message.Sender == ServerEP ? "s" : "c")}][{message.Sender}][{message.Latency.TotalMilliseconds}ms][{message.MessageIntent}]");
         }
     }
 }

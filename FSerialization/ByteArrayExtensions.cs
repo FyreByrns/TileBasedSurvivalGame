@@ -94,39 +94,48 @@ namespace FSerialization {
                 me.Append(array.Length);
 
                 for (int i = 0; i < array.Length; i++) {
-                    me.Append(array.GetValue(i));
+                    //me.Append(array.GetValue(i));
+                    me._Append(array.GetValue(i), typeof(T).Name.TrimEnd("[]".ToCharArray()).ToLower());
                 }
             }
             else {
+                Console.WriteLine(typeof(T));
                 switch (StandardNameOf<T>()) {
                     case BYTE: {
                             me.AddBytes((byte)o);
+                            writeIndex++;
                             break;
                         }
                     case BOOL: {
                             me.AddBytes((bool)o ? (byte)1 : (byte)0);
+                            writeIndex++;
                             break;
                         }
                     case CHAR: {
-                            me.AddBytes(me[writeIndex] = (byte)(char)o);
+                            me.AddBytes(/*me[writeIndex] = */(byte)(char)o);
+                            writeIndex++;
                             break;
                         }
 
                     case INT: {
                             me.AddBytes(BitConverter.GetBytes((int)o));
+                            writeIndex += sizeof(int);
                             break;
                         }
                     case UINT: {
                             me.AddBytes(BitConverter.GetBytes((uint)o));
+                            writeIndex += sizeof(uint);
                             break;
                         }
                     case LONG: {
                             me.AddBytes(BitConverter.GetBytes((long)o));
+                            writeIndex += sizeof(long);
                             break;
                         }
 
                     case FLOAT: {
                             me.AddBytes(BitConverter.GetBytes((float)o));
+                            writeIndex += sizeof(float);
                             break;
                         }
 
@@ -138,6 +147,20 @@ namespace FSerialization {
             }
 
             perArrayIndices[arrayID] = writeIndex;
+        }
+        private static void _Append(this List<byte> me, object item, string standardName) {
+            object o = item; // for cleaner casting
+            switch (standardName) {
+                case BYTE: {
+                        me.Append<byte>((byte)o);
+                        break;
+                    } 
+                case
+                CHAR: {
+                        me.Append<char>((char)o);
+                        break;
+                    }
+            }
         }
 
         public static byte[] DoubleSize(this byte[] me) {

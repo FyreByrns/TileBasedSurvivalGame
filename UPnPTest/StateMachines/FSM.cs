@@ -13,7 +13,7 @@
             CurrentState.Enter(default(TContext));
         }
 
-        public void Update(TContext context, IStateMachine<TContext> machine) {
+        public virtual void Update(TContext context, IStateMachine<TContext> machine) {
             IState<TContext> updateResult = CurrentState.Update(context);
             if (updateResult != null) {
                 CurrentState.Exit(context);

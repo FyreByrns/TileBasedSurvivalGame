@@ -25,6 +25,7 @@ namespace TileBasedSurvivalGame.Networking {
         Dictionary<PlayerID, ServersideConnectionStateMachine> _statesByID;
 
         public void Respond(NetMessage originalMessage, NetMessage response) {
+            Console.WriteLine($"{originalMessage.Sender} == {NetHandler.ClientEP} : {originalMessage.Sender == NetHandler.ClientEP}");
             NetHandler.SendTo(originalMessage.Sender, response);
         }
 

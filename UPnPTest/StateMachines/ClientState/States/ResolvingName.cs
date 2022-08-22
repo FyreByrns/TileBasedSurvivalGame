@@ -17,6 +17,11 @@ namespace TileBasedSurvivalGame.StateMachines.ClientsideConnectionState.States {
             List<byte> data = new List<byte>();
             data.Append(name);
 
+            foreach(byte b in data) {
+                System.Console.Write((char)b);
+            }
+            System.Console.WriteLine();
+
             NetHandler.SendToServer(NetMessage.ConstructToSend(RequestDesiredName, data.ToArray()));
         }
     }
