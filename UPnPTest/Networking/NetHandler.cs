@@ -17,6 +17,11 @@ namespace TileBasedSurvivalGame.Networking {
         public static bool HasClient { get; private set; }
         public static IPAddress ServerIP { get; private set; }
         public static int ServerPort { get; private set; }
+        public static IPEndPoint ServerEP => new IPEndPoint(ServerIP, ServerPort);
+
+        public static IPAddress ClientIP { get; private set; }
+        public static int ClientPort { get; private set; }
+        public static IPEndPoint ClientEP => new IPEndPoint(ClientIP, ClientPort);
 
         private static UdpClient _serverListener;
         private static UdpClient _clientListener;
@@ -30,6 +35,13 @@ namespace TileBasedSurvivalGame.Networking {
         }
 
         public static void SendTo(IPEndPoint target, NetMessage message) {
+            // direct-pipe straight to client, if there's an integrated server
+            if(HasClient && target == ClientEP) {
+                NetMessage.SetSender(ref message, ServerEP);
+                OnClientMessage(message);
+                return;
+            }
+
             // make sure sender UdpClient exists
             if (_sender == null) {
                 _sender = new UdpClient();
@@ -47,7 +59,14 @@ namespace TileBasedSurvivalGame.Networking {
         }
 
         public static void SendToServer(NetMessage message) {
-            SendTo(new IPEndPoint(ServerIP, ServerPort), message);
+            // direct-pipe straight to integrated server
+            if (HasServer) {
+                NetMessage.SetSender(ref message, ClientEP);
+                OnServerMessage(message);
+                return;
+            }
+
+            SendTo(ServerEP, message);
         }
 
         static void StartListening(bool client, bool server) {
@@ -79,6 +98,9 @@ namespace TileBasedSurvivalGame.Networking {
                 if (_clientListener == null) {
                     _clientListener = new UdpClient();
                     _clientListener.Connect(new IPEndPoint(ServerIP, ServerPort));
+
+                    ClientIP = ((IPEndPoint)_clientListener.Client.LocalEndPoint).Address;
+                    ClientPort = ((IPEndPoint)_clientListener.Client.LocalEndPoint).Port;
                 }
 
                 // start client listening
@@ -98,6 +120,18 @@ namespace TileBasedSurvivalGame.Networking {
             ServerIP = serverIP;
             ServerPort = serverPort;
             StartListening(client, server);
+
+            ServerMessage += NetHandler_Message;
+            ClientMessage += NetHandler_Message;
+        }
+
+        private static void NetHandler_Message(NetMessage message) {
+            if (message == null) {
+                Console.WriteLine("null message");
+                return;
+            }
+
+            Console.WriteLine($"[{(message.Sender == ServerEP ? "s" : "c")}][{message.Sender}][{message.Latency.TotalMilliseconds}ms]");
         }
     }
 }
