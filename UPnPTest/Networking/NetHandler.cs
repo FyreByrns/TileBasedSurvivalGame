@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define EXCESSIVE_DEBUG_PRINTS
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,19 +15,13 @@ namespace TileBasedSurvivalGame.Networking {
         public static event NetMessageEventHandler ServerMessage;
         public static event NetMessageEventHandler ClientMessage;
 
-        public static bool HasServer { get; private set; }
-        public static bool HasClient { get; private set; }
         public static IPAddress ServerIP { get; private set; }
         public static int ServerPort { get; private set; }
         public static IPEndPoint ServerEP => new IPEndPoint(ServerIP, ServerPort);
+        public static Server IntegratedServer { get; private set; }
 
-        public static IPAddress ClientIP { get; private set; }
-        public static int ClientPort { get; private set; }
-        public static IPEndPoint ClientEP => new IPEndPoint(ClientIP, ClientPort);
-
-        private static UdpClient _serverListener;
-        private static UdpClient _clientListener;
-        private static UdpClient _sender;
+        private static UdpClient server;
+        private static UdpClient client;
 
         public static void OnServerMessage(NetMessage message) {
             ServerMessage?.Invoke(message);
@@ -34,110 +30,61 @@ namespace TileBasedSurvivalGame.Networking {
             ClientMessage?.Invoke(message);
         }
 
-        public static void SendTo(IPEndPoint target, NetMessage message) {
-
-#if EXCESSIVE_DEBUG_PRINTS
-            foreach(byte b in message.RawData.Skip(sizeof(long))) {
-                Console.Write($"{b,4}");
-            }
-            Console.WriteLine();
-            foreach(byte b in message.RawData.Skip(sizeof(long))) {
-                Console.Write($"{(char)b,4}");
-            }
-            Console.WriteLine();
-#endif // EXCESSIVE_DEBUG_PRINTS
-
-            if (target.Equals(ClientEP)) {
-                Console.WriteLine($"s->c {message.MessageIntent}");
-            }
-            if (target.Equals(ServerEP)) {
-                Console.WriteLine($"c->s {message.MessageIntent}");
-            }
-
-            // direct-pipe straight to client, if there's an integrated server
-            if (HasClient && target.Equals(ClientEP)) {
-                NetMessage.SetSender(ref message, ServerEP);
-                Console.WriteLine(message.MessageIntent);
-                OnClientMessage(NetMessage.ConstructFromSent(ServerEP, message.RawData));
-                return;
-            }
-            // direct-pipe straight to integrated server
-            if (HasServer && target.Equals(ServerEP)) {
-                NetMessage.SetSender(ref message, ClientEP);
-                OnServerMessage(NetMessage.ConstructFromSent(ClientEP, message.RawData));
-                return;
-            }
-
-            // make sure sender UdpClient exists
-            if (_sender == null) {
-                _sender = new UdpClient();
-                _sender.Client.Bind(new IPEndPoint(IPAddress.Loopback, 0));
-            }
-
+        public static void SendToClient(IPEndPoint target, NetMessage message) {
             Task.Run(() => {
-                int sent = _sender.Send(message.RawData, message.RawData.Length, target);
+                Console.WriteLine($"to {target}: {message.MessageIntent}");
 
-                if (sent != message.RawData.Length) {
-                    // something went wrong
-                    Console.WriteLine($"tried to send {message.RawData.Length}, sent {sent} instead");
-                }
+                server.Send(message.RawData, message.RawData.Length, target);
             });
         }
 
         public static void SendToServer(NetMessage message) {
-            SendTo(ServerEP, message);
+            Task.Run(() => {
+                Console.WriteLine($"to server: {message.MessageIntent}");
+
+                client.Send(message.RawData, message.RawData.Length, ServerEP);
+            });
         }
 
+        private static void ServerDataReceived(IAsyncResult result) {
+            UdpClient self = (UdpClient)result.AsyncState;
+
+            IPEndPoint from = new IPEndPoint(IPAddress.Any, 0);
+            byte[] data = self.EndReceive(result, ref from);
+
+            NetMessage message = NetMessage.ConstructFromSent(from, data);
+
+            OnServerMessage(message);
+
+            self.BeginReceive(ServerDataReceived, result.AsyncState);
+        }
+        private static void ClientDataReceived(IAsyncResult result) {
+            UdpClient self = (UdpClient)result.AsyncState;
+
+            IPEndPoint from = new IPEndPoint(IPAddress.Any, 0);
+            byte[] data = self.EndReceive(result, ref from);
+
+            NetMessage message = NetMessage.ConstructFromSent(from, data);
+
+            OnClientMessage(message);
+
+            self.BeginReceive(ClientDataReceived, result.AsyncState);
+        }
         static void StartListening(bool client, bool server) {
-            HasClient = client;
-            HasServer = server;
-
-            // if there's a need to handle the server
-            if (HasServer) {
-                // make sure the listener exists
-                if (_serverListener == null) {
-                    _serverListener = new UdpClient(ServerPort);
-                }
-
-                // start server listening
-                Task.Run(() => {
-                    while (true) {
-                        // receive data
-                        IPEndPoint sender = null;
-                        byte[] receivedData = _serverListener.Receive(ref sender);
-
-                        OnServerMessage(NetMessage.ConstructFromSent(sender, receivedData));
-                    }
-                });
+            if (server) {
+                NetHandler.server = new UdpClient(ServerPort);
+                NetHandler.server.BeginReceive(ServerDataReceived, NetHandler.server);
             }
-
-            // if there's a need to handle a client
-            if (HasClient) {
-                // make sure the client listener exists
-                if (_clientListener == null) {
-                    _clientListener = new UdpClient();
-                    _clientListener.Connect(new IPEndPoint(ServerIP, ServerPort));
-
-                    ClientIP = ((IPEndPoint)_clientListener.Client.LocalEndPoint).Address;
-                    ClientPort = ((IPEndPoint)_clientListener.Client.LocalEndPoint).Port;
-                }
-
-                // start client listening
-                Task.Run(() => {
-                    while (true) {
-                        // receive data
-                        IPEndPoint sender = null;
-                        byte[] receivedData = _clientListener.Receive(ref sender);
-
-                        OnClientMessage(NetMessage.ConstructFromSent(sender, receivedData));
-                    }
-                });
+            if (client) {
+                NetHandler.client = new UdpClient(0);
+                NetHandler.client.BeginReceive(ClientDataReceived, NetHandler.client);
             }
         }
 
         public static void Setup(IPAddress serverIP, int serverPort, bool client, bool server) {
             ServerIP = serverIP;
             ServerPort = serverPort;
+            IntegratedServer = new Server();
             StartListening(client, server);
 
             ServerMessage += NetHandler_Message;
@@ -150,7 +97,7 @@ namespace TileBasedSurvivalGame.Networking {
                 return;
             }
 
-            Console.WriteLine($"[{(message.Sender.Equals(ServerEP) ? "s" : "c")}][{message.Sender}][{message.Latency.TotalMilliseconds}ms][{message.MessageIntent}]");
+            Console.WriteLine($"fr {(message.Sender.Equals(ServerEP) ? "server" : message.Sender.ToString())} {message.MessageIntent}");
         }
     }
 }

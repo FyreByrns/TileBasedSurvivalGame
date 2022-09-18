@@ -11,8 +11,9 @@ using FSerialization;
 
 using PlayerID = System.Int32;
 using static TileBasedSurvivalGame.Networking.NetMessage.Intent;
-using TileBasedSurvivalGame.StateMachines.ServersideConnectionState;
-using TileBasedSurvivalGame.StateMachines.ServersideConnectionState.States;
+using TileBasedSurvivalGame.StateMachines;
+using TileBasedSurvivalGame.StateMachines.Serverside;
+using TileBasedSurvivalGame.StateMachines.Serverside.ConnectionStates;
 
 namespace TileBasedSurvivalGame.Networking {
     class Server {
@@ -22,11 +23,13 @@ namespace TileBasedSurvivalGame.Networking {
         LobbyData _lobbyData;
         Dictionary<PlayerID, IPEndPoint> _endpointsByID;
         Dictionary<IPEndPoint, PlayerID> _IDsByEndpoint;
-        Dictionary<PlayerID, ServersideConnectionStateMachine> _statesByID;
+        Dictionary<PlayerID, ConnectionStateMachine> _statesByID;
 
-        public void Respond(NetMessage originalMessage, NetMessage response) {
-            Console.WriteLine($"{originalMessage.Sender} == {NetHandler.ClientEP} : {originalMessage.Sender == NetHandler.ClientEP}");
-            NetHandler.SendTo(originalMessage.Sender, response);
+        public int GetNumberOfPlayers() {
+            return _lobbyData.Players.Count;
+        }
+        public IEnumerable<PlayerID> GetPlayerIDs() {
+            return _endpointsByID.Keys;
         }
 
         public Server() {
@@ -35,18 +38,30 @@ namespace TileBasedSurvivalGame.Networking {
 
             _endpointsByID = new Dictionary<PlayerID, IPEndPoint>();
             _IDsByEndpoint = new Dictionary<IPEndPoint, PlayerID>();
+            _statesByID = new Dictionary<PlayerID, ConnectionStateMachine>();
             _lobbyData = new LobbyData();
-            _statesByID = new Dictionary<PlayerID, ServersideConnectionStateMachine>();
         }
 
-        void RegisterNewClient(PlayerID playerID, IPEndPoint endpoint) {
-            _endpointsByID[playerID] = endpoint;
-            _IDsByEndpoint[endpoint] = playerID;
+        void RegisterNewClient(PlayerID playerID, NetMessage originator) {
+            _endpointsByID[playerID] = originator.Sender;
+            _IDsByEndpoint[originator.Sender] = playerID;
             _lobbyData.AddPlayer(playerID, new Player());
 
-            _statesByID[playerID] = new ServersideConnectionStateMachine(this);
-            _statesByID[playerID].CurrentState = new InitiatingConnection();
-            _statesByID[playerID].Enter();
+            _statesByID[playerID] = new ConnectionStateMachine();
+            _statesByID[playerID].CurrentState = new ResolvingName(_statesByID[playerID]);
+        }
+
+        void UpdateConnectionState(NetMessage originatingMessage) {
+            if (originatingMessage == null) { return; }
+
+            // asynchronously handle state change
+            Task.Run(() => {
+                PlayerID playerID = _IDsByEndpoint[originatingMessage.Sender];
+                ConnectionStateMachine connectionStateMachine = _statesByID[playerID];
+                Console.WriteLine($"c[{playerID}]: {connectionStateMachine.CurrentState.GetType().Name}");
+                StateMachineHandler.Update(connectionStateMachine, originatingMessage);
+                Console.WriteLine($"n[{playerID}]: {connectionStateMachine.CurrentState.GetType().Name}");
+            });
         }
 
         private void Server_MessageReceived(NetMessage message) {
@@ -54,26 +69,26 @@ namespace TileBasedSurvivalGame.Networking {
             if (message == NetMessage.BlockedMessage) {
                 return;
             }
+            // if the intent is to ping, pong
+            if (message.MessageIntent == Ping) {
+                NetHandler.SendToClient(message.Sender,
+                    NetMessage.ConstructToSend(Ping));
+                return;
+            }
 
             // if the message is from a known client
             if (_IDsByEndpoint.ContainsKey(message.Sender)) {
                 // handle the message based on game state, intent, etc
-                Console.WriteLine($"[s] rcv msg from {message.Sender}[{_IDsByEndpoint[message.Sender]},{_IDsByEndpoint[message.Sender]}]");
+                Console.WriteLine($"[s] rcv msg from {message.Sender}[{_IDsByEndpoint[message.Sender]}]");
+                Console.WriteLine($"  intent: {message.MessageIntent}");
+                UpdateConnectionState(message);
 
-                _statesByID[_IDsByEndpoint[message.Sender]]
-                    .Update(message, _statesByID[_IDsByEndpoint[message.Sender]]);
-                
                 // message is done with, read state may be cleared
                 message.RawData.Done();
             }
             // otherwise ..
             else {
-                // .. if the message intent is to ping, send back a pong
-                if (message.MessageIntent == Ping) {
-                    Respond(message,
-                        NetMessage.ConstructToSend(Ping));
-                    return;
-                }
+                Console.WriteLine($"[s] new connection from {message.Sender}!");
 
                 // .. if the message intent is to begin a connection, 
                 // .. and a connection is allowed, begin a connection
@@ -87,11 +102,13 @@ namespace TileBasedSurvivalGame.Networking {
                         newID = _rng.Next(PlayerID.MaxValue);
                     }
                     // add player to lobby
-                    RegisterNewClient(newID, message.Sender);
+                    RegisterNewClient(newID, message);
 
-                    // respond with AllowConnection
-                    Respond(message,
-                        NetMessage.ConstructToSend(AllowConnection));
+                    // allow connection
+                    NetHandler.SendToClient(message.Sender, NetMessage.ConstructToSend(AllowConnection));
+
+                    // handle message using state machine
+                    NetHandler.OnServerMessage(message);
                     return;
                 }
             }

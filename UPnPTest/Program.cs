@@ -15,16 +15,13 @@ using static TileBasedSurvivalGame.Helper;
 namespace TileBasedSurvivalGame {
     internal class Program {
         static void Main(string[] args) {
+        goto_connectionInit:
             //// one user will also be running a server in the background
             // ask in console if you are a session host
-            bool hosting = Helper.Ask("Are you the session host?", false);
-            if (hosting) {
-                Server s = new Server();
-            }
+            bool hosting = Ask("Are you the session host?", false);
 
-        // then, create the client and run it
-        // ask what IP and port to connect to
-        goto_connectionInit:
+            // then, create the client and run it
+            // ask what IP and port to connect to
             Console.Write("Enter server address.\n> ");
 
             IPAddress serverAddress = null;
@@ -41,13 +38,14 @@ namespace TileBasedSurvivalGame {
 
             int port = Ask("Enter server port.", 18888);
 
+            // setup network handler
+            NetHandler.Setup(serverAddress, port, true, hosting);
+
+            // setup client
             Client client = new Client();
             // todo: load values from config files
             client.Construct(400, 225, 2, 2);
 
-            // setup network handler
-            NetHandler.Setup(serverAddress, port, true, hosting);
-            NetHandler.OnClientMessage(default(NetMessage)); // kickstart clientside state update
             client.Start();
         }
     }

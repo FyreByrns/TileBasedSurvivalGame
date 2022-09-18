@@ -8,6 +8,7 @@ namespace TileBasedSurvivalGame.Networking {
 
             //// general utility intentions
             Ping = 1,
+            Received,
             SendString,
             SendNumber,
 
@@ -16,6 +17,7 @@ namespace TileBasedSurvivalGame.Networking {
             RequestConnection, // c request starting a connection
             AllowConnection, //   s allow connection
             RequestDesiredName, //s request the desired username from a client
+            AllowDesiredName, //  s allow desired username
             DenyDesiredName, //   s deny desired username
             RequestLobbyInfo, //  c request lobby information
             SendPlayerCount, //   s send number of players in the lobby
@@ -41,7 +43,7 @@ connecting to server:
  - server requests the client's desired name with RequestDesiredName
  - client sends desired using RequestDesiredName
  - if the name is accepted (not taken, reserved, etc), 
- - server sends AllowConnection, continue
+ - server sends AllowDesiredUsername, continue
  otherwise:
  - server sends DenyDesiredName
  - name resolution begins again

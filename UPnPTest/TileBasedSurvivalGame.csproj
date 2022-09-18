@@ -55,16 +55,13 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Networking\Server.cs" />
-    <Compile Include="StateMachines\ClientState\ClientsideConnectionStateMachine.cs" />
-    <Compile Include="StateMachines\ClientState\States\CS_ConnectionState.cs" />
-    <Compile Include="StateMachines\ClientState\States\InitiatingConnection.cs" />
-    <Compile Include="StateMachines\ClientState\States\ResolvingName.cs" />
-    <Compile Include="StateMachines\IState.cs" />
-    <Compile Include="StateMachines\FSM.cs" />
-    <Compile Include="StateMachines\ServerState\States\InitiatingConnection.cs" />
-    <Compile Include="StateMachines\ServerState\ServersideConnectionStateMachine.cs" />
-    <Compile Include="StateMachines\ServerState\States\NegotiatingName.cs" />
-    <Compile Include="StateMachines\ServerState\States\SS_ConnectionState.cs" />
+    <Compile Include="StateMachines\Clientside\ConnectionState.cs" />
+    <Compile Include="StateMachines\Clientside\ConnectionStateMachine.cs" />
+    <Compile Include="StateMachines\Serverside\ConnectionState.cs" />
+    <Compile Include="StateMachines\Serverside\ConnectionStateMachine.cs" />
+    <Compile Include="StateMachines\State.cs" />
+    <Compile Include="StateMachines\IStateMachine.cs" />
+    <Compile Include="StateMachines\StateMachineHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -79,5 +76,6 @@
       <Name>FSerialization</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
