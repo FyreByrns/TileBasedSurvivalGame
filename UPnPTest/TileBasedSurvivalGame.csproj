@@ -55,13 +55,6 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Networking\Server.cs" />
-    <Compile Include="StateMachines\Clientside\ConnectionState.cs" />
-    <Compile Include="StateMachines\Clientside\ConnectionStateMachine.cs" />
-    <Compile Include="StateMachines\Serverside\ConnectionState.cs" />
-    <Compile Include="StateMachines\Serverside\ConnectionStateMachine.cs" />
-    <Compile Include="StateMachines\State.cs" />
-    <Compile Include="StateMachines\IStateMachine.cs" />
-    <Compile Include="StateMachines\StateMachineHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -16,14 +16,23 @@ namespace TileBasedSurvivalGame.Networking {
             //// .. and maintaining lobby state
             RequestConnection, // c request starting a connection
             AllowConnection, //   s allow connection
+            // == content ==
+            // int32 client ID
             RequestDesiredName, //s request the desired username from a client
             AllowDesiredName, //  s allow desired username
             DenyDesiredName, //   s deny desired username
             RequestLobbyInfo, //  c request lobby information
-            SendPlayerCount, //   s send number of players in the lobby
-            SendPlayerIDs, //     s send player IDs 
-            RequestPlayerInfo, // c request info for a specific player ID
-            SendPlayerInfo, //    s send player info
+            SendLobbyInfo, //     s send lobby information
+            // == content ==
+            // int32    pc          : player count 
+            // int[pc]  playerIDs   : player IDs
+            RequestName, //       c request the name of a player by id
+            // == content ==
+            // int32 playerID
+            SendName, //          s send the name of a player
+            // == content ==
+            // int32 playerID
+            // string playerName
         }
     }
 

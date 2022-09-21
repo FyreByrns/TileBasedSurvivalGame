@@ -167,7 +167,7 @@ namespace FSerialization {
             return me;
         }
 
-        public static void Done(this byte[] me) {
+        public static void ResetReadIndex(this byte[] me) {
             int arrayID = me.GetHashCode();
             if (perArrayIndices.ContainsKey(arrayID)) {
                 perArrayIndices.Remove(arrayID);

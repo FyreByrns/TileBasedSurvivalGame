@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Net;
-using System.Net.Sockets;
 using System.Collections.Generic;
 
 using FSerialization;
@@ -11,44 +10,60 @@ using FSerialization;
 
 using PlayerID = System.Int32;
 using static TileBasedSurvivalGame.Networking.NetMessage.Intent;
-using TileBasedSurvivalGame.StateMachines;
-using TileBasedSurvivalGame.StateMachines.Serverside;
-using TileBasedSurvivalGame.StateMachines.Serverside.ConnectionStates;
+using static TileBasedSurvivalGame.Networking.Server.ServersideClientState;
+using ByteList = System.Collections.Generic.List<byte>;
+using System.Linq;
 
 namespace TileBasedSurvivalGame.Networking {
     class Server {
+        public enum ServersideClientState {
+            None,
+
+            ResolvingName,
+            InLobby,
+
+        }
+
         Random _rng;
 
         // lobby data
-        LobbyData _lobbyData;
-        Dictionary<PlayerID, IPEndPoint> _endpointsByID;
-        Dictionary<IPEndPoint, PlayerID> _IDsByEndpoint;
-        Dictionary<PlayerID, ConnectionStateMachine> _statesByID;
+        List<Player> _players = new List<Player>();
+        Dictionary<PlayerID, IPEndPoint> _endpoints;
+        Dictionary<PlayerID, ServersideClientState> _states;
+        Dictionary<IPEndPoint, PlayerID> _IDs;
+
+        Player GetPlayerByID(PlayerID id) {
+            foreach (Player player in _players) {
+                if (player.ID == id) {
+                    return player;
+                }
+            }
+
+            return null;
+        }
 
         public int GetNumberOfPlayers() {
-            return _lobbyData.Players.Count;
+            return _players.Count;
         }
         public IEnumerable<PlayerID> GetPlayerIDs() {
-            return _endpointsByID.Keys;
+            return _endpoints.Keys;
         }
 
         public Server() {
             _rng = new Random((int)DateTime.Now.Ticks);
             NetHandler.ServerMessage += Server_MessageReceived;
 
-            _endpointsByID = new Dictionary<PlayerID, IPEndPoint>();
-            _IDsByEndpoint = new Dictionary<IPEndPoint, PlayerID>();
-            _statesByID = new Dictionary<PlayerID, ConnectionStateMachine>();
-            _lobbyData = new LobbyData();
+            _endpoints = new Dictionary<PlayerID, IPEndPoint>();
+            _IDs = new Dictionary<IPEndPoint, PlayerID>();
+            _states = new Dictionary<PlayerID, ServersideClientState>();
+            _players = new List<Player>();
         }
 
         void RegisterNewClient(PlayerID playerID, NetMessage originator) {
-            _endpointsByID[playerID] = originator.Sender;
-            _IDsByEndpoint[originator.Sender] = playerID;
-            _lobbyData.AddPlayer(playerID, new Player());
-
-            _statesByID[playerID] = new ConnectionStateMachine();
-            _statesByID[playerID].CurrentState = new ResolvingName(_statesByID[playerID]);
+            _endpoints[playerID] = originator.Sender;
+            _IDs[originator.Sender] = playerID;
+            _states[playerID] = ResolvingName;
+            _players.Add(new Player() { ID = playerID });
         }
 
         void UpdateConnectionState(NetMessage originatingMessage) {
@@ -56,11 +71,63 @@ namespace TileBasedSurvivalGame.Networking {
 
             // asynchronously handle state change
             Task.Run(() => {
-                PlayerID playerID = _IDsByEndpoint[originatingMessage.Sender];
-                ConnectionStateMachine connectionStateMachine = _statesByID[playerID];
-                Console.WriteLine($"c[{playerID}]: {connectionStateMachine.CurrentState.GetType().Name}");
-                StateMachineHandler.Update(connectionStateMachine, originatingMessage);
-                Console.WriteLine($"n[{playerID}]: {connectionStateMachine.CurrentState.GetType().Name}");
+                PlayerID playerID = _IDs[originatingMessage.Sender];
+                ServersideClientState playerState = _states[playerID];
+                Player player = GetPlayerByID(playerID);
+
+                switch (playerState) {
+                    case ResolvingName: {
+                            string requestedName = originatingMessage.RawData.Get<string>();
+                            if (ReservedWords.IsWordReserved(requestedName)) {
+                                // word is reserved, don't allow the name
+                                NetHandler.SendToClient(originatingMessage.Sender, NetMessage.ConstructToSend(DenyDesiredName));
+                                break;
+                            }
+                            // otherwise allow the name
+                            player.Name = requestedName;
+                            NetHandler.SendToClient(originatingMessage.Sender, NetMessage.ConstructToSend(AllowDesiredName));
+                            // update client state
+                            _states[playerID] = InLobby;
+                            break;
+                        }
+                    case InLobby: {
+                            // nested switch statements my beloved
+                            switch (originatingMessage.MessageIntent) {
+                                case RequestLobbyInfo: {
+                                        ByteList data = new ByteList();
+                                        data.Append(GetNumberOfPlayers());
+
+                                        foreach (Player p in _players) {
+                                            data.Append(p.ID);
+                                        }
+
+                                        NetHandler.SendToClient(originatingMessage.Sender, NetMessage.ConstructToSend(
+                                            SendLobbyInfo,
+                                            data.ToArray()
+                                            ));
+                                    }
+                                    break;
+                                case RequestName: {
+                                        PlayerID desiredID = originatingMessage.RawData.Get<PlayerID>();
+                                        Player desiredPlayer = GetPlayerByID(desiredID);
+
+                                        if(desiredPlayer != null && desiredPlayer.HasName) {
+                                            ByteList data = new ByteList();
+                                            data.Append(desiredID);
+                                            data.Append(desiredPlayer.Name);
+                                            NetHandler.SendToClient(originatingMessage.Sender, NetMessage.ConstructToSend(
+                                                SendName,
+                                                data.ToArray()
+                                                ));
+                                        }
+
+                                        break;
+                                    }
+                            }
+
+                            break;
+                        }
+                }
             });
         }
 
@@ -77,14 +144,14 @@ namespace TileBasedSurvivalGame.Networking {
             }
 
             // if the message is from a known client
-            if (_IDsByEndpoint.ContainsKey(message.Sender)) {
+            if (_IDs.ContainsKey(message.Sender)) {
                 // handle the message based on game state, intent, etc
-                Console.WriteLine($"[s] rcv msg from {message.Sender}[{_IDsByEndpoint[message.Sender]}]");
+                Console.WriteLine($"[s] rcv msg from {message.Sender}[{_IDs[message.Sender]}]");
                 Console.WriteLine($"  intent: {message.MessageIntent}");
                 UpdateConnectionState(message);
 
                 // message is done with, read state may be cleared
-                message.RawData.Done();
+                message.RawData.ResetReadIndex();
             }
             // otherwise ..
             else {
@@ -98,16 +165,18 @@ namespace TileBasedSurvivalGame.Networking {
                     // ensure uniqueness with dumb loop, there are better ways
                     // .. but I'm using system random anyway so better ways
                     // .. don't seem entirely relevant
-                    while (_endpointsByID.ContainsKey(newID)) {
+                    while (_endpoints.ContainsKey(newID)) {
                         newID = _rng.Next(PlayerID.MaxValue);
                     }
                     // add player to lobby
                     RegisterNewClient(newID, message);
 
                     // allow connection
-                    NetHandler.SendToClient(message.Sender, NetMessage.ConstructToSend(AllowConnection));
+                    ByteList data = new ByteList();
+                    data.Append(newID);
+                    NetHandler.SendToClient(message.Sender, NetMessage.ConstructToSend(AllowConnection, data.ToArray()));
 
-                    // handle message using state machine
+                    // handle message now that client is known
                     NetHandler.OnServerMessage(message);
                     return;
                 }
