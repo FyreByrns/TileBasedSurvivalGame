@@ -105,9 +105,10 @@ namespace TileBasedSurvivalGame.Networking {
             result.RawData = data;
 
             // parse
-            result.Sent = new DateTime(data.Get<long>());
-            result.MessageIntent = (Intent)data.Get<int>();
-            result.RawData = data.Get<byte[]>();
+            int headerReadIndex = 0;
+            result.Sent = new DateTime(data.Get<long>(ref headerReadIndex));
+            result.MessageIntent = (Intent)data.Get<int>(ref headerReadIndex);
+            result.RawData = data.Get<byte[]>(ref headerReadIndex);
 
             return result;
         }

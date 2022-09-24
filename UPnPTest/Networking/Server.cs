@@ -42,6 +42,13 @@ namespace TileBasedSurvivalGame.Networking {
             return null;
         }
 
+        //// send a message to all connected clients
+        public void SendToAll(NetMessage message) {
+            foreach (IPEndPoint endpoint in _endpoints.Values) {
+                NetHandler.SendToClient(endpoint, message);
+            }
+        }
+
         public int GetNumberOfPlayers() {
             return _players.Count;
         }
@@ -77,7 +84,9 @@ namespace TileBasedSurvivalGame.Networking {
 
                 switch (playerState) {
                     case ResolvingName: {
-                            string requestedName = originatingMessage.RawData.Get<string>();
+                            int readIndex = 0;
+                            string requestedName = originatingMessage.RawData.Get<string>(ref readIndex);
+                            Console.WriteLine($"requested name: {requestedName}");
                             if (ReservedWords.IsWordReserved(requestedName)) {
                                 // word is reserved, don't allow the name
                                 NetHandler.SendToClient(originatingMessage.Sender, NetMessage.ConstructToSend(DenyDesiredName));
@@ -88,6 +97,12 @@ namespace TileBasedSurvivalGame.Networking {
                             NetHandler.SendToClient(originatingMessage.Sender, NetMessage.ConstructToSend(AllowDesiredName));
                             // update client state
                             _states[playerID] = InLobby;
+
+                            // inform others of join
+                            ByteList data = new ByteList();
+                            data.Append(playerID);
+                            data.Append(requestedName);
+                            SendToAll(NetMessage.ConstructToSend(PlayerJoin, data.ToArray()));
                             break;
                         }
                     case InLobby: {
@@ -108,10 +123,11 @@ namespace TileBasedSurvivalGame.Networking {
                                     }
                                     break;
                                 case RequestName: {
-                                        PlayerID desiredID = originatingMessage.RawData.Get<PlayerID>();
+                                        int readIndex = 0;
+                                        PlayerID desiredID = originatingMessage.RawData.Get<PlayerID>(ref readIndex);
                                         Player desiredPlayer = GetPlayerByID(desiredID);
 
-                                        if(desiredPlayer != null && desiredPlayer.HasName) {
+                                        if (desiredPlayer != null && desiredPlayer.HasName) {
                                             ByteList data = new ByteList();
                                             data.Append(desiredID);
                                             data.Append(desiredPlayer.Name);
@@ -149,9 +165,6 @@ namespace TileBasedSurvivalGame.Networking {
                 Console.WriteLine($"[s] rcv msg from {message.Sender}[{_IDs[message.Sender]}]");
                 Console.WriteLine($"  intent: {message.MessageIntent}");
                 UpdateConnectionState(message);
-
-                // message is done with, read state may be cleared
-                message.RawData.ResetReadIndex();
             }
             // otherwise ..
             else {

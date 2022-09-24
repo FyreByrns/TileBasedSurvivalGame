@@ -33,6 +33,10 @@ namespace TileBasedSurvivalGame.Networking {
             // == content ==
             // int32 playerID
             // string playerName
+            PlayerJoin, //        s notify clients of a player join
+            // == content ==
+            // int32 playerID
+            // string playerName
         }
     }
 

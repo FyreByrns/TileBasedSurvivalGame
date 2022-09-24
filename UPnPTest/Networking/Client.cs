@@ -27,7 +27,7 @@ namespace TileBasedSurvivalGame.Networking {
         public int MyID { get; private set; }
         // ugly invisible state
         public NetMessage MostRecentMessage { get; private set; }
-        PlayerList Players;
+        PlayerList Players = new PlayerList();
 
         Player GetPlayerByID(int id) {
             foreach (Player player in Players) {
@@ -39,6 +39,25 @@ namespace TileBasedSurvivalGame.Networking {
         }
 
         public void UpdateState() {
+            if (MostRecentMessage?.MessageIntent == PlayerJoin) {
+                int readIndex = 0;
+
+                int id = MostRecentMessage.RawData.Get<int>(ref readIndex);
+                Players.Add(new Player(id, id != MyID));
+                Player player = GetPlayerByID(id);
+                if (player == null) {
+                    return;
+                }
+                player.Name = MostRecentMessage.RawData.Get<string>(ref readIndex);
+
+                Console.WriteLine("players:");
+                foreach (Player p in Players) {
+                    Console.WriteLine($"\t{p.ID}:{p.Remote}:{p.Name}");
+                }
+
+                return;
+            }
+
             switch (CurrentState) {
                 case ClientsideClientState.None: {
                         if (MostRecentMessage == null) {
@@ -46,11 +65,11 @@ namespace TileBasedSurvivalGame.Networking {
                             NetHandler.SendToServer(NetMessage.ConstructToSend(RequestConnection));
                         }
                         else {
-                            MostRecentMessage?.RawData.ResetReadIndex();
                             // server might have responded to the connection request
                             if (MostRecentMessage?.MessageIntent == AllowConnection) {
                                 // get my id from message
-                                MyID = MostRecentMessage.RawData.Get<int>();
+                                int readIndex = 0;
+                                MyID = MostRecentMessage.RawData.Get<int>(ref readIndex);
 
                                 // request a name
                                 // .. get name TODO actually use proper menu
@@ -83,13 +102,14 @@ namespace TileBasedSurvivalGame.Networking {
 
                 case EnteringLobby: {
                         if (MostRecentMessage?.MessageIntent == SendLobbyInfo) {
-                            int numberOfPlayers = MostRecentMessage.RawData.Get<int>();
+                            int readIndex = 0;
+                            int numberOfPlayers = MostRecentMessage.RawData.Get<int>(ref readIndex);
                             Players = new PlayerList(numberOfPlayers);
 
                             // add players by IDs
                             for (int i = 0; i < numberOfPlayers; i++) {
-                                int id = MostRecentMessage.RawData.Get<int>();
-                                Players.Add(new Player(id, id == MyID));
+                                int id = MostRecentMessage.RawData.Get<int>(ref readIndex);
+                                Players.Add(new Player(id, id != MyID));
                             }
                             // request names
                             for (int i = 0; i < numberOfPlayers; i++) {
@@ -102,12 +122,14 @@ namespace TileBasedSurvivalGame.Networking {
                             }
                         }
                         if (MostRecentMessage?.MessageIntent == SendName) {
-                            int id = MostRecentMessage.RawData.Get<int>();
+                            int readIndex = 0;
+                            int id = MostRecentMessage.RawData.Get<int>(ref readIndex);
                             Player player = GetPlayerByID(id);
-                            player.Name = MostRecentMessage.RawData.Get<string>();
+                            player.Name = MostRecentMessage.RawData.Get<string>(ref readIndex);
 
+                            Console.WriteLine("players:");
                             foreach (Player p in Players) {
-                                Console.WriteLine($"players:\n\t{p.ID}:{p.Remote}:{p.Name}");
+                                Console.WriteLine($"\t{p.ID}:{p.Remote}:{p.Name}");
                             }
                         }
                         break;
