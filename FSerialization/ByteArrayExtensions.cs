@@ -6,24 +6,19 @@ using static FSerialization.TypeWrangler;
 
 namespace FSerialization {
     public static class ByteArrayExtensions {
-        // store read index for each byte array
-        static Dictionary<int, int> perArrayIndices = new Dictionary<int, int>();
-
-        public static T Get<T>(this byte[] me) {
-            int arrayID = me.GetHashCode();
-            if (!perArrayIndices.ContainsKey(arrayID)) {
-                perArrayIndices[arrayID] = 0;
-            }
-
-            int readIndex = perArrayIndices[arrayID];
+        public static T Get<T>(this byte[] me, ref int index) {
             T result = default;
 
             if (typeof(T).IsArray) { // if array deserializing
-                int len = me.Get<int>();
+                int len = me.Get<int>(ref index);
                 object array = Activator.CreateInstance(typeof(T), new object[] { len }); // create array
                 for (int i = 0; i < len; i++) { // read values into array
-                    MethodInfo info = typeof(ByteArrayExtensions).GetMethod("Get").MakeGenericMethod(array.GetType().GetElementType());
-                    ((Array)array).SetValue(info.Invoke(null, new object[] { me }), i);
+                    MethodInfo reflectionGetT 
+                        = typeof(ByteArrayExtensions).GetMethod("Get").MakeGenericMethod(array.GetType().GetElementType());
+                    object[] arguments = { me, index };
+                    ((Array)array).SetValue(reflectionGetT.Invoke(null, arguments), i);
+                    // retrieve ref
+                    index = (int)arguments[1];
                 }
 
                 result = (T)array;
@@ -31,49 +26,48 @@ namespace FSerialization {
             else { // otherwise, just read the value
                 switch (StandardNameOf<T>()) {
                     case BYTE: {
-                            result = (T)(object)me[readIndex];
-                            readIndex++;
+                            result = (T)(object)me[index];
+                            index++;
                             break;
                         }
                     case BOOL: {
-                            result = (T)(object)(me[readIndex] == 1);
-                            readIndex++;
+                            result = (T)(object)(me[index] == 1);
+                            index++;
                             break;
                         }
                     case CHAR: {
-                            result = (T)(object)(char)me[readIndex];
-                            readIndex++;
+                            result = (T)(object)(char)me[index];
+                            index++;
                             break;
                         }
 
                     case INT: {
-                            result = (T)(object)BitConverter.ToInt32(me, readIndex);
-                            readIndex += 4;
+                            result = (T)(object)BitConverter.ToInt32(me, index);
+                            index += 4;
                             break;
                         }
                     case UINT: {
-                            result = (T)(object)BitConverter.ToUInt32(me, readIndex);
-                            readIndex += 4;
+                            result = (T)(object)BitConverter.ToUInt32(me, index);
+                            index += 4;
                             break;
                         }
                     case LONG: {
-                            result = (T)(object)BitConverter.ToInt64(me, readIndex);
-                            readIndex += 8;
+                            result = (T)(object)BitConverter.ToInt64(me, index);
+                            index += 8;
                             break;
                         }
                     case FLOAT: {
-                            result = (T)(object)BitConverter.ToSingle(me, readIndex);
-                            readIndex += 4;
+                            result = (T)(object)BitConverter.ToSingle(me, index);
+                            index += 4;
                             break;
                         }
 
                     case STRING: {
-                            result = (T)(object)new string(me.Get<char[]>());
+                            result = (T)(object)new string(me.Get<char[]>(ref index));
                             break;
                         }
                 }
             }
-            perArrayIndices[arrayID] = readIndex;
 
             return result;
         }
@@ -82,12 +76,6 @@ namespace FSerialization {
             me.AddRange(bytes);
         }
         public static void Append<T>(this List<byte> me, T item) {
-            int arrayID = me.GetHashCode();
-            if (!perArrayIndices.ContainsKey(arrayID)) {
-                perArrayIndices[arrayID] = 0;
-            }
-            int writeIndex = perArrayIndices[arrayID];
-
             object o = item; // for cleaner casting
             if (typeof(T).IsArray) {
                 Array array = (Array)o;
@@ -95,46 +83,39 @@ namespace FSerialization {
 
                 for (int i = 0; i < array.Length; i++) {
                     //me.Append(array.GetValue(i));
-                    me._Append(array.GetValue(i), typeof(T).Name.TrimEnd("[]".ToCharArray()).ToLower());
+                    me.AppendByStringTypeName(array.GetValue(i), typeof(T).Name.TrimEnd("[]".ToCharArray()).ToLower());
                 }
             }
             else {
                 switch (StandardNameOf<T>()) {
                     case BYTE: {
                             me.AddBytes((byte)o);
-                            writeIndex++;
                             break;
                         }
                     case BOOL: {
                             me.AddBytes((bool)o ? (byte)1 : (byte)0);
-                            writeIndex++;
                             break;
                         }
                     case CHAR: {
                             me.AddBytes(/*me[writeIndex] = */(byte)(char)o);
-                            writeIndex++;
                             break;
                         }
 
                     case INT: {
                             me.AddBytes(BitConverter.GetBytes((int)o));
-                            writeIndex += sizeof(int);
                             break;
                         }
                     case UINT: {
                             me.AddBytes(BitConverter.GetBytes((uint)o));
-                            writeIndex += sizeof(uint);
                             break;
                         }
                     case LONG: {
                             me.AddBytes(BitConverter.GetBytes((long)o));
-                            writeIndex += sizeof(long);
                             break;
                         }
 
                     case FLOAT: {
                             me.AddBytes(BitConverter.GetBytes((float)o));
-                            writeIndex += sizeof(float);
                             break;
                         }
 
@@ -144,10 +125,8 @@ namespace FSerialization {
                         }
                 }
             }
-
-            perArrayIndices[arrayID] = writeIndex;
         }
-        private static void _Append(this List<byte> me, object item, string standardName) {
+        private static void AppendByStringTypeName(this List<byte> me, object item, string standardName) {
             object o = item; // for cleaner casting
             switch (standardName) {
                 case BYTE: {
@@ -165,13 +144,6 @@ namespace FSerialization {
         public static byte[] DoubleSize(this byte[] me) {
             Array.Resize(ref me, me.Length * 2);
             return me;
-        }
-
-        public static void ResetReadIndex(this byte[] me) {
-            int arrayID = me.GetHashCode();
-            if (perArrayIndices.ContainsKey(arrayID)) {
-                perArrayIndices.Remove(arrayID);
-            }
         }
     }
 }
