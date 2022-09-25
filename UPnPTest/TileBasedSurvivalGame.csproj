@@ -55,6 +55,16 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Networking\Server.cs" />
+    <Compile Include="Rendering\Camera.cs" />
+    <Compile Include="Rendering\TileRenderingHandler.cs" />
+    <Compile Include="World\Barrier.cs" />
+    <Compile Include="World\Box.cs" />
+    <Compile Include="World\Chunk.cs" />
+    <Compile Include="World\Entity.cs" />
+    <Compile Include="World\Location.cs" />
+    <Compile Include="World\Tile.cs" />
+    <Compile Include="World\TiledWorld.cs" />
+    <Compile Include="World\TileTypeHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

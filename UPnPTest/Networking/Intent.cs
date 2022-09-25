@@ -37,6 +37,9 @@ namespace TileBasedSurvivalGame.Networking {
             // == content ==
             // int32 playerID
             // string playerName
+
+            //// world state
+            
         }
     }
 
