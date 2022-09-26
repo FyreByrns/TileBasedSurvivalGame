@@ -11,7 +11,7 @@ namespace TileBasedSurvivalGame.Rendering {
         
         public static Dictionary<string, tri> RenderingInfo { get; }
         = new Dictionary<string, tri>() {
-            {"stone"            , (c(100, 100, 100), c(50, 50, 50))},
+            {"test"            , (c(100, 100, 100), c(50, 50, 50))},
         };
 
         public static tri GetRenderingInfo(string type) {

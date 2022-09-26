@@ -13,6 +13,7 @@ using static TileBasedSurvivalGame.Networking.NetMessage.Intent;
 using static TileBasedSurvivalGame.Networking.Server.ServersideClientState;
 using ByteList = System.Collections.Generic.List<byte>;
 using System.Linq;
+using TileBasedSurvivalGame.World;
 
 namespace TileBasedSurvivalGame.Networking {
     class Server {
@@ -31,6 +32,10 @@ namespace TileBasedSurvivalGame.Networking {
         Dictionary<PlayerID, IPEndPoint> _endpoints;
         Dictionary<PlayerID, ServersideClientState> _states;
         Dictionary<IPEndPoint, PlayerID> _IDs;
+
+        // world data
+        TiledWorld World { get; }
+        = new TiledWorld();
 
         Player GetPlayerByID(PlayerID id) {
             foreach (Player player in _players) {

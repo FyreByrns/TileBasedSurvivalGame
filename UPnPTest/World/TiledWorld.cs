@@ -3,6 +3,9 @@
 namespace TileBasedSurvivalGame.World {
     //// chunked tiled world, arbitrary height
     class TiledWorld {
+        public delegate void WorldChangeEventHandler(Location chunkLoc, Location tileLoc, Tile tile);
+        public event WorldChangeEventHandler WorldChange;
+
         public ChunkMap Chunks { get; private set; }
         = new ChunkMap();
 
@@ -43,6 +46,7 @@ namespace TileBasedSurvivalGame.World {
         }
         public void SetTile(Location chunkLoc, Location tileLoc, Tile tile) {
             GetChunk(chunkLoc).SetTile(tileLoc, tile);
+            WorldChange?.Invoke(chunkLoc, tileLoc, tile);
         }
     }
 }

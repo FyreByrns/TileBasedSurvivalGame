@@ -9,6 +9,8 @@ using static TileBasedSurvivalGame.Networking.Client.ClientsideClientState;
 using static TileBasedSurvivalGame.Networking.NetMessage.Intent;
 using ByteList = System.Collections.Generic.List<byte>;
 using PlayerList = System.Collections.Generic.List<TileBasedSurvivalGame.Networking.Player>;
+using TileBasedSurvivalGame.World;
+using TileBasedSurvivalGame.Rendering;
 
 namespace TileBasedSurvivalGame.Networking {
     class Client : Game {
@@ -28,6 +30,13 @@ namespace TileBasedSurvivalGame.Networking {
         // ugly invisible state
         public NetMessage MostRecentMessage { get; private set; }
         PlayerList Players = new PlayerList();
+
+        public TiledWorld World { get; }
+        = new TiledWorld();
+        public Location CameraLocation { get; set; }
+        = Location.Zero;
+        public Camera Camera { get; set; }
+        = new Camera();
 
         Player GetPlayerByID(int id) {
             foreach (Player player in Players) {
@@ -58,6 +67,29 @@ namespace TileBasedSurvivalGame.Networking {
                 return;
             }
 
+            // always do these things
+            #region stateless actions
+
+            if (MostRecentMessage?.MessageIntent == SendName) {
+                int readIndex = 0;
+                int id = MostRecentMessage.RawData.Get<int>(ref readIndex);
+                Player player = GetPlayerByID(id);
+                player.Name = MostRecentMessage.RawData.Get<string>(ref readIndex);
+            }
+
+            if (MostRecentMessage?.MessageIntent == PlayerJoin) {
+                int readIndex = 0;
+                int id = MostRecentMessage.RawData.Get<int>(ref readIndex);
+                Player player = GetPlayerByID(id);
+                if (player == null) {
+                    player = new Player(id, id != MyID);
+                    Players.Add(player);
+                }
+            }
+
+            #endregion stateless actions
+
+            // stateful actions
             switch (CurrentState) {
                 case ClientsideClientState.None: {
                         if (MostRecentMessage == null) {
@@ -74,7 +106,7 @@ namespace TileBasedSurvivalGame.Networking {
                                 // request a name
                                 // .. get name TODO actually use proper menu
                                 Console.Write("Enter your name: ");
-                                string name = Console.ReadLine();
+                                string name = "unnamed";//Console.ReadLine();
                                 ByteList data = new ByteList();
                                 data.Append(name);
                                 // .. send name request
@@ -120,18 +152,13 @@ namespace TileBasedSurvivalGame.Networking {
                                     data.ToArray()
                                     ));
                             }
+                            // initial lobby connection done, state -> InLobby
+                            CurrentState = InLobby;
                         }
-                        if (MostRecentMessage?.MessageIntent == SendName) {
-                            int readIndex = 0;
-                            int id = MostRecentMessage.RawData.Get<int>(ref readIndex);
-                            Player player = GetPlayerByID(id);
-                            player.Name = MostRecentMessage.RawData.Get<string>(ref readIndex);
+                        break;
+                    }
+                case InLobby: {
 
-                            Console.WriteLine("players:");
-                            foreach (Player p in Players) {
-                                Console.WriteLine($"\t{p.ID}:{p.Remote}:{p.Name}");
-                            }
-                        }
                         break;
                     }
             }
@@ -140,14 +167,23 @@ namespace TileBasedSurvivalGame.Networking {
         public override void OnUpdate(float elapsed) {
             base.OnUpdate(elapsed);
 
-            Draw(MouseX, MouseY, Pixel.Presets.Lime);
+            int ts = TileRenderingHandler.TileSize;
+            int mouseGlobalX = MouseX / ts;
+            int mouseGlobalY = MouseY / ts;
+            Location mouseChunk = Location.WorldToChunk(CameraLocation + new Location(mouseGlobalX, mouseGlobalY, 0));
+            Location mouseTile = Location.WorldToTile(CameraLocation + new Location(mouseGlobalX, mouseGlobalY, 0));
 
-            if (GetMouse(Mouse.Left).Pressed) {
-                NetHandler.SendToServer(NetMessage.ConstructToSend(Ping));
+            if (GetMouse(Mouse.Left).Down) {
+                World.SetTile(mouseChunk, mouseTile, TileTypeHandler.CreateTile("test"));
             }
 
             // handle state, state changes
             UpdateState();
+
+            // render
+            Camera.Render(this, World, CameraLocation);
+            // draw tile cursor
+            DrawRect(new Point(mouseGlobalX * ts, mouseGlobalY * ts), ts, ts, Pixel.Presets.White);
         }
 
         public Client() {

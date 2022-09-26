@@ -14,8 +14,30 @@ namespace TileBasedSurvivalGame.Rendering {
             int screenTileWidth = context.ScreenWidth / TileRenderingHandler.TileSize;
             int screenTileHeight = context.ScreenHeight / TileRenderingHandler.TileSize;
 
+            // clear screen
+            context.Clear(Pixel.Presets.Black);
             for (int x = 0; x < screenTileWidth; x++) {
                 for (int y = 0; y < screenTileHeight; y++) {
+                    // draw grid
+                    context.Draw(
+                        x * TileRenderingHandler.TileSize,
+                        y * TileRenderingHandler.TileSize,
+                        Pixel.Presets.DarkMagenta);
+                    // x chunk borders
+                    if (x % Chunk.Size == 0 || x % Chunk.Size == Chunk.Size - 1) {
+                        context.Draw(
+                            x * TileRenderingHandler.TileSize + TileRenderingHandler.TileSize / 2,
+                            y * TileRenderingHandler.TileSize + TileRenderingHandler.TileSize / 2,
+                            Pixel.Presets.Magenta);
+                    }
+                    // y chunk borders
+                    if (y % Chunk.Size == 0 || y % Chunk.Size == Chunk.Size - 1) {
+                        context.Draw(
+                            x * TileRenderingHandler.TileSize + TileRenderingHandler.TileSize / 2,
+                            y * TileRenderingHandler.TileSize + TileRenderingHandler.TileSize / 2,
+                            Pixel.Presets.Magenta);
+                    }
+
                     for (int z = 0; z < RenderingHeight; z++) {
                         Location currentLocation = location + new Location(x, y, z);
 
