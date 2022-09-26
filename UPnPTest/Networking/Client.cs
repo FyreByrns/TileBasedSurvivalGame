@@ -173,6 +173,14 @@ namespace TileBasedSurvivalGame.Networking {
             Location mouseChunk = Location.WorldToChunk(CameraLocation + new Location(mouseGlobalX, mouseGlobalY, 0));
             Location mouseTile = Location.WorldToTile(CameraLocation + new Location(mouseGlobalX, mouseGlobalY, 0));
 
+            int camXChange = 0;
+            int camYChange = 0;
+            if (GetKey(Key.W).Down) { camYChange -= 1; }
+            if (GetKey(Key.S).Down) { camYChange += 1; }
+            if (GetKey(Key.A).Down) { camXChange -= 1; }
+            if (GetKey(Key.D).Down) { camXChange += 1; }
+            CameraLocation += new Location(camXChange, camYChange, 0);
+
             if (GetMouse(Mouse.Left).Down) {
                 World.SetTile(mouseChunk, mouseTile, TileTypeHandler.CreateTile("test"));
             }

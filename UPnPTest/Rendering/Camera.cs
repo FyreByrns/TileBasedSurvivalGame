@@ -24,14 +24,14 @@ namespace TileBasedSurvivalGame.Rendering {
                         y * TileRenderingHandler.TileSize,
                         Pixel.Presets.DarkMagenta);
                     // x chunk borders
-                    if (x % Chunk.Size == 0 || x % Chunk.Size == Chunk.Size - 1) {
+                    if (location.X + x % Chunk.Size == 0 || location.X + x % Chunk.Size == Chunk.Size - 1) {
                         context.Draw(
                             x * TileRenderingHandler.TileSize + TileRenderingHandler.TileSize / 2,
                             y * TileRenderingHandler.TileSize + TileRenderingHandler.TileSize / 2,
                             Pixel.Presets.Magenta);
                     }
                     // y chunk borders
-                    if (y % Chunk.Size == 0 || y % Chunk.Size == Chunk.Size - 1) {
+                    if (location.Y + y % Chunk.Size == 0 || location.Y + y % Chunk.Size == Chunk.Size - 1) {
                         context.Draw(
                             x * TileRenderingHandler.TileSize + TileRenderingHandler.TileSize / 2,
                             y * TileRenderingHandler.TileSize + TileRenderingHandler.TileSize / 2,
@@ -46,7 +46,7 @@ namespace TileBasedSurvivalGame.Rendering {
                         if (TileTypeHandler.Invisible(tile.Type)) continue;
 
                         TileRenderingHandler.TileRenderingInfo renderingInfo = TileRenderingHandler.GetRenderingInfo(tile.Type);
-                        if(renderingInfo == null) continue;
+                        if (renderingInfo == null) continue;
 
                         context.FillRect(
                             new Point(
