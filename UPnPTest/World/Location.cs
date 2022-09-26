@@ -29,7 +29,7 @@
             return world / Chunk.Size;
         }
         //// find what tile a global location is in a chunk
-        public static Location WorldToTile(Location world) {
+        public static Location ToTile(Location world) {
             return new Location(world.X % Chunk.Size, world.Y % Chunk.Size, world.Z % Chunk.Size);
         }
         //// find global location from a chunk and tile location

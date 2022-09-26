@@ -171,7 +171,7 @@ namespace TileBasedSurvivalGame.Networking {
             int mouseGlobalX = MouseX / ts;
             int mouseGlobalY = MouseY / ts;
             Location mouseChunk = Location.WorldToChunk(CameraLocation + new Location(mouseGlobalX, mouseGlobalY, 0));
-            Location mouseTile = Location.WorldToTile(CameraLocation + new Location(mouseGlobalX, mouseGlobalY, 0));
+            Location mouseTile = Location.ToTile(CameraLocation + new Location(mouseGlobalX, mouseGlobalY, 0));
 
             int camXChange = 0;
             int camYChange = 0;

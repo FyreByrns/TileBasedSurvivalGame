@@ -14,54 +14,37 @@ namespace TileBasedSurvivalGame.Rendering {
             int screenTileWidth = context.ScreenWidth / TileRenderingHandler.TileSize;
             int screenTileHeight = context.ScreenHeight / TileRenderingHandler.TileSize;
 
+            int ts = TileRenderingHandler.TileSize;
+
             // clear screen
             context.Clear(Pixel.Presets.Black);
             for (int x = 0; x < screenTileWidth; x++) {
                 for (int y = 0; y < screenTileHeight; y++) {
+                    Location twoDimTileLoc = Location.ToTile(location + new Location(x, y, 0));
+
                     // draw grid
-                    context.Draw(
-                        x * TileRenderingHandler.TileSize,
-                        y * TileRenderingHandler.TileSize,
-                        Pixel.Presets.DarkMagenta);
+                    context.Draw(x * ts, y * ts, Pixel.Presets.DarkMagenta);
                     // x chunk borders
-                    if (location.X + x % Chunk.Size == 0 || location.X + x % Chunk.Size == Chunk.Size - 1) {
-                        context.Draw(
-                            x * TileRenderingHandler.TileSize + TileRenderingHandler.TileSize / 2,
-                            y * TileRenderingHandler.TileSize + TileRenderingHandler.TileSize / 2,
-                            Pixel.Presets.Magenta);
+                    if (twoDimTileLoc.X == 0 || twoDimTileLoc.X == Chunk.Size - 1) {
+                        context.Draw(x * ts + ts / 2, y * ts + ts / 2, Pixel.Presets.Magenta);
                     }
                     // y chunk borders
-                    if (location.Y + y % Chunk.Size == 0 || location.Y + y % Chunk.Size == Chunk.Size - 1) {
-                        context.Draw(
-                            x * TileRenderingHandler.TileSize + TileRenderingHandler.TileSize / 2,
-                            y * TileRenderingHandler.TileSize + TileRenderingHandler.TileSize / 2,
-                            Pixel.Presets.Magenta);
+                    if (twoDimTileLoc.Y == 0 || twoDimTileLoc.Y == Chunk.Size - 1) {
+                        context.Draw(x * ts + ts / 2, y * ts + ts / 2, Pixel.Presets.Magenta);
                     }
 
                     for (int z = 0; z < RenderingHeight; z++) {
                         Location currentLocation = location + new Location(x, y, z);
 
-                        Tile tile = world.GetTile(Location.WorldToChunk(currentLocation), Location.WorldToTile(currentLocation));
+                        Tile tile = world.GetTile(Location.WorldToChunk(currentLocation), Location.ToTile(currentLocation));
                         if (tile == null) continue;
                         if (TileTypeHandler.Invisible(tile.Type)) continue;
 
                         TileRenderingHandler.TileRenderingInfo renderingInfo = TileRenderingHandler.GetRenderingInfo(tile.Type);
                         if (renderingInfo == null) continue;
 
-                        context.FillRect(
-                            new Point(
-                                x * TileRenderingHandler.TileSize,
-                                y * TileRenderingHandler.TileSize),
-                                TileRenderingHandler.TileSize,
-                                TileRenderingHandler.TileSize,
-                                renderingInfo.InsideColour);
-                        context.DrawRect(
-                            new Point(
-                                x * TileRenderingHandler.TileSize,
-                                y * TileRenderingHandler.TileSize),
-                                TileRenderingHandler.TileSize,
-                                TileRenderingHandler.TileSize,
-                                renderingInfo.InsideColour);
+                        context.DrawRect(new Point(x * ts, y * ts), ts, ts, renderingInfo.InsideColour);
+                        context.FillRect(new Point(x * ts, y * ts), ts, ts, renderingInfo.InsideColour);
                     }
                 }
             }
