@@ -9,6 +9,7 @@ using TileBasedSurvivalGame.World;
 namespace TileBasedSurvivalGame.Rendering {
     class Camera {
         public int RenderingHeight { get; set; } = 10;
+        public bool DrawGrid { get; set; } = true;
 
         public void Render(Game context, TiledWorld world, Location location) {
             int screenTileWidth = context.ScreenWidth / TileRenderingHandler.TileSize;
@@ -23,14 +24,16 @@ namespace TileBasedSurvivalGame.Rendering {
                     Location twoDimTileLoc = Location.ToTile(location + new Location(x, y, 0));
 
                     // draw grid
-                    context.Draw(x * ts, y * ts, Pixel.Presets.DarkMagenta);
-                    // x chunk borders
-                    if (twoDimTileLoc.X == 0 || twoDimTileLoc.X == Chunk.Size - 1) {
-                        context.Draw(x * ts + ts / 2, y * ts + ts / 2, Pixel.Presets.Magenta);
-                    }
-                    // y chunk borders
-                    if (twoDimTileLoc.Y == 0 || twoDimTileLoc.Y == Chunk.Size - 1) {
-                        context.Draw(x * ts + ts / 2, y * ts + ts / 2, Pixel.Presets.Magenta);
+                    if (DrawGrid) {
+                        context.Draw(x * ts, y * ts, Pixel.Presets.DarkMagenta);
+                        // x chunk borders
+                        if (twoDimTileLoc.X == 0 || twoDimTileLoc.X == Chunk.Size - 1) {
+                            context.Draw(x * ts + ts / 2, y * ts + ts / 2, Pixel.Presets.Magenta);
+                        }
+                        // y chunk borders
+                        if (twoDimTileLoc.Y == 0 || twoDimTileLoc.Y == Chunk.Size - 1) {
+                            context.Draw(x * ts + ts / 2, y * ts + ts / 2, Pixel.Presets.Magenta);
+                        }
                     }
 
                     for (int z = 0; z < RenderingHeight; z++) {
