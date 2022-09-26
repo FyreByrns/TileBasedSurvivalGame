@@ -53,6 +53,9 @@ namespace TileBasedSurvivalGame.Networking {
                 NetHandler.SendToClient(endpoint, message);
             }
         }
+        public void SendToAll(byte[] data) {
+            SendToAll(new NetMessage() { RawData = data });
+        }
 
         public int GetNumberOfPlayers() {
             return _players.Count;
@@ -141,6 +144,26 @@ namespace TileBasedSurvivalGame.Networking {
                                                 data.ToArray()
                                                 ));
                                         }
+
+                                        break;
+                                    }
+                                case ClientTileChange: {
+                                        int readIndex = 0;
+
+                                        int globalX = originatingMessage.RawData.Get<int>(ref readIndex);
+                                        int globalY = originatingMessage.RawData.Get<int>(ref readIndex);
+                                        int globalZ = originatingMessage.RawData.Get<int>(ref readIndex);
+                                        Location global = new Location(globalX, globalY, globalZ);
+                                        string tile = originatingMessage.RawData.Get<string>(ref readIndex);
+                                        World.SetTile(Location.ToChunk(global), Location.ToTile(global), TileTypeHandler.CreateTile(tile));
+
+                                        ByteList data = new ByteList();
+                                        data.Append(playerID);
+                                        data.Append(globalX);
+                                        data.Append(globalY);
+                                        data.Append(globalZ);
+                                        data.Append(tile);
+                                        SendToAll(NetMessage.ConstructToSend(ServerTileChange, data.ToArray()));
 
                                         break;
                                     }

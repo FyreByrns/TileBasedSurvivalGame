@@ -39,7 +39,15 @@ namespace TileBasedSurvivalGame.Networking {
             // string playerName
 
             //// world state
-            
+            ClientTileChange,
+            // == content ==
+            // int32 globalX, globalY, globalZ
+            // string type
+            ServerTileChange,
+            // == content ==
+            // int32 originating ID
+            // int32 globalX, globalY, globalZ,
+            // string type
         }
     }
 

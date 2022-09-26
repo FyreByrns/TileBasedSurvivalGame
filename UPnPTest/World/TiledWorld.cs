@@ -44,9 +44,11 @@ namespace TileBasedSurvivalGame.World {
             }
             return null;
         }
-        public void SetTile(Location chunkLoc, Location tileLoc, Tile tile) {
+        public void SetTile(Location chunkLoc, Location tileLoc, Tile tile, bool silent = false) {
             GetChunk(chunkLoc).SetTile(tileLoc, tile);
-            WorldChange?.Invoke(chunkLoc, tileLoc, tile);
+            if (!silent) {
+                WorldChange?.Invoke(chunkLoc, tileLoc, tile);
+            }
         }
     }
 }

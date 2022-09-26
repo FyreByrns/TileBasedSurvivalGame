@@ -157,6 +157,17 @@ namespace TileBasedSurvivalGame.Networking {
                         break;
                     }
                 case InLobby: {
+                        if(MostRecentMessage?.MessageIntent == ServerTileChange) {
+                            int readIndex = 0;
+                            int originatingID = MostRecentMessage.RawData.Get<int>(ref readIndex);
+                            int globalX = MostRecentMessage.RawData.Get<int>(ref readIndex);
+                            int globalY = MostRecentMessage.RawData.Get<int>(ref readIndex);
+                            int globalZ = MostRecentMessage.RawData.Get<int>(ref readIndex);
+                            Location global = new Location(globalX, globalY, globalZ);
+                            string tile = MostRecentMessage.RawData.Get<string>(ref readIndex);
+
+                            World.SetTile(Location.ToChunk(global), Location.ToTile(global), TileTypeHandler.CreateTile(tile), originatingID == MyID);
+                        }
 
                         break;
                     }
@@ -199,6 +210,19 @@ namespace TileBasedSurvivalGame.Networking {
             NetHandler.ClientMessage += NetHandler_ClientMessage;
             CurrentState = ClientsideClientState.None;
             Camera = new Camera(World);
+            World.WorldChange += World_WorldChange;
+        }
+
+        private void World_WorldChange(Location chunkLoc, Location tileLoc, Tile tile) {
+            // send change to server
+            Location global = Location.ToWorld(chunkLoc, tileLoc);
+            ByteList data = new ByteList();
+            data.Append(global.X);
+            data.Append(global.Y);
+            data.Append(global.Z);
+            data.Append(tile.Type);
+
+            NetHandler.SendToServer(NetMessage.ConstructToSend(ClientTileChange, data.ToArray()));
         }
 
         private void NetHandler_ClientMessage(NetMessage message) {

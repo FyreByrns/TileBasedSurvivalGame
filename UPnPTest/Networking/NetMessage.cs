@@ -26,7 +26,7 @@ namespace TileBasedSurvivalGame.Networking {
         public Intent MessageIntent { get; private set; }
 
         // body
-        public byte[] RawData { get; private set; }
+        public byte[] RawData { get; set; }
 
         // other
         public bool Blocked { get; private set; }
