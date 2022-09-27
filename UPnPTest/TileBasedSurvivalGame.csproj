@@ -44,7 +44,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Engine.cs" />
     <Compile Include="InputHandler.cs" />
+    <Compile Include="ITickable.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Networking\Client.cs" />
     <Compile Include="Helper.cs" />
