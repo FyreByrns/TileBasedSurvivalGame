@@ -3,7 +3,7 @@
 namespace TileBasedSurvivalGame.World {
     //// chunked tiled world, arbitrary height
     class TiledWorld {
-        public delegate void WorldChangeEventHandler(Location chunkLoc, Location tileLoc, Tile tile);
+        public delegate void WorldChangeEventHandler(Location chunkLoc, Location tileLoc, Tile tile, bool fromServer);
         public event WorldChangeEventHandler WorldChange;
 
         public ChunkMap Chunks { get; private set; }
@@ -44,10 +44,10 @@ namespace TileBasedSurvivalGame.World {
             }
             return null;
         }
-        public void SetTile(Location chunkLoc, Location tileLoc, Tile tile, bool silent = false) {
+        public void SetTile(Location chunkLoc, Location tileLoc, Tile tile, bool silent = false, bool fromServer = false) {
             GetChunk(chunkLoc).SetTile(tileLoc, tile);
             if (!silent) {
-                WorldChange?.Invoke(chunkLoc, tileLoc, tile);
+                WorldChange?.Invoke(chunkLoc, tileLoc, tile, fromServer);
             }
         }
     }

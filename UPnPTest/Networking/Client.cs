@@ -166,7 +166,7 @@ namespace TileBasedSurvivalGame.Networking {
                             Location global = new Location(globalX, globalY, globalZ);
                             string tile = MostRecentMessage.RawData.Get<string>(ref readIndex);
 
-                            World.SetTile(Location.ToChunk(global), Location.ToTile(global), TileTypeHandler.CreateTile(tile), originatingID == MyID);
+                            World.SetTile(Location.ToChunk(global), Location.ToTile(global), TileTypeHandler.CreateTile(tile), originatingID == MyID, true);
                         }
 
                         break;
@@ -213,7 +213,7 @@ namespace TileBasedSurvivalGame.Networking {
             World.WorldChange += World_WorldChange;
         }
 
-        private void World_WorldChange(Location chunkLoc, Location tileLoc, Tile tile) {
+        private void World_WorldChange(Location chunkLoc, Location tileLoc, Tile tile, bool fromServer) {
             // send change to server
             Location global = Location.ToWorld(chunkLoc, tileLoc);
             ByteList data = new ByteList();
@@ -222,7 +222,9 @@ namespace TileBasedSurvivalGame.Networking {
             data.Append(global.Z);
             data.Append(tile.Type);
 
-            NetHandler.SendToServer(NetMessage.ConstructToSend(ClientTileChange, data.ToArray()));
+            if (!fromServer) {
+                NetHandler.SendToServer(NetMessage.ConstructToSend(ClientTileChange, data.ToArray()));
+            }
         }
 
         private void NetHandler_ClientMessage(NetMessage message) {

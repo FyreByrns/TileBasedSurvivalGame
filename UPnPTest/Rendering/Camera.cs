@@ -122,7 +122,7 @@ namespace TileBasedSurvivalGame.Rendering {
             World.WorldChange += WorldChanged;
         }
 
-        private void WorldChanged(Location chunkLoc, Location tileLoc, Tile tile) {
+        private void WorldChanged(Location chunkLoc, Location tileLoc, Tile tile, bool fromServer) {
             InvalidateCache(chunkLoc);
         }
     }
