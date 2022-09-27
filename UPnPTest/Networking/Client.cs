@@ -166,7 +166,7 @@ namespace TileBasedSurvivalGame.Networking {
                             Location global = new Location(globalX, globalY, globalZ);
                             string tile = MostRecentMessage.RawData.Get<string>(ref readIndex);
 
-                            World.SetTile(Location.ToChunk(global), Location.ToTile(global), TileTypeHandler.CreateTile(tile), originatingID == MyID, true);
+                            World.SetTile(Location.ToChunk(global), Location.ToTile(global), TileTypeHandler.CreateTile(tile), false, true);
                         }
 
                         break;
