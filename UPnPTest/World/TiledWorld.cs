@@ -12,8 +12,7 @@ namespace TileBasedSurvivalGame.World {
         public Location TileLocationToChunkLocation(Location tileLocation) {
             int x = tileLocation.X % Chunk.Size;
             int y = tileLocation.Y % Chunk.Size;
-            int z = tileLocation.Z % Chunk.Size;
-            return new Location(x, y, z, tileLocation.Dimension);
+            return new Location(x, y, tileLocation.Dimension);
         }
 
         public Chunk GetChunk(Location chunkLocation) {

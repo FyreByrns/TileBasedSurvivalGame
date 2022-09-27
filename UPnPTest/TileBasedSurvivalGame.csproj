@@ -58,7 +58,6 @@
     <Compile Include="Rendering\Camera.cs" />
     <Compile Include="Rendering\TileRenderingHandler.cs" />
     <Compile Include="World\Barrier.cs" />
-    <Compile Include="World\Box.cs" />
     <Compile Include="World\Chunk.cs" />
     <Compile Include="World\Entity.cs" />
     <Compile Include="World\Location.cs" />

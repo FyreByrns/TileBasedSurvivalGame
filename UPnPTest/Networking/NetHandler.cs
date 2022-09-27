@@ -32,7 +32,7 @@ namespace TileBasedSurvivalGame.Networking {
 
         public static void SendToClient(IPEndPoint target, NetMessage message) {
             Task.Run(() => {
-                Console.WriteLine($"to {target}: {message.MessageIntent}");
+                Logger.Log($"to {target}: {message.MessageIntent}");
 
                 server.Send(message.RawData, message.RawData.Length, target);
             });
@@ -40,7 +40,7 @@ namespace TileBasedSurvivalGame.Networking {
 
         public static void SendToServer(NetMessage message) {
             Task.Run(() => {
-                Console.WriteLine($"to server: {message.MessageIntent}");
+                Logger.Log($"to server: {message.MessageIntent}");
 
                 client.Send(message.RawData, message.RawData.Length, ServerEP);
             });
@@ -93,11 +93,11 @@ namespace TileBasedSurvivalGame.Networking {
 
         private static void NetHandler_Message(NetMessage message) {
             if (message == null) {
-                Console.WriteLine("null message");
+                Logger.Log("null message");
                 return;
             }
 
-            Console.WriteLine($"fr {(message.Sender.Equals(ServerEP) ? "server" : message.Sender.ToString())} {message.MessageIntent}");
+            Logger.Log($"fr {(message.Sender.Equals(ServerEP) ? "server" : message.Sender.ToString())} {message.MessageIntent}");
         }
     }
 }

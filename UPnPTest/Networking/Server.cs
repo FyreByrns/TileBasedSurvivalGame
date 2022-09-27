@@ -94,7 +94,7 @@ namespace TileBasedSurvivalGame.Networking {
                     case ResolvingName: {
                             int readIndex = 0;
                             string requestedName = originatingMessage.RawData.Get<string>(ref readIndex);
-                            Console.WriteLine($"requested name: {requestedName}");
+                            Logger.Log($"requested name: {requestedName}");
                             if (ReservedWords.IsWordReserved(requestedName)) {
                                 // word is reserved, don't allow the name
                                 NetHandler.SendToClient(originatingMessage.Sender, NetMessage.ConstructToSend(DenyDesiredName));
@@ -153,7 +153,7 @@ namespace TileBasedSurvivalGame.Networking {
                                         int globalX = originatingMessage.RawData.Get<int>(ref readIndex);
                                         int globalY = originatingMessage.RawData.Get<int>(ref readIndex);
                                         int globalZ = originatingMessage.RawData.Get<int>(ref readIndex);
-                                        Location global = new Location(globalX, globalY, globalZ);
+                                        Location global = new Location(globalX, globalY);
                                         string tile = originatingMessage.RawData.Get<string>(ref readIndex);
                                         World.SetTile(Location.ToChunk(global), Location.ToTile(global), TileTypeHandler.CreateTile(tile));
 
@@ -190,13 +190,13 @@ namespace TileBasedSurvivalGame.Networking {
             // if the message is from a known client
             if (_IDs.ContainsKey(message.Sender)) {
                 // handle the message based on game state, intent, etc
-                Console.WriteLine($"[s] rcv msg from {message.Sender}[{_IDs[message.Sender]}]");
-                Console.WriteLine($"  intent: {message.MessageIntent}");
+                Logger.Log($"[s] rcv msg from {message.Sender}[{_IDs[message.Sender]}]");
+                Logger.Log($"  intent: {message.MessageIntent}");
                 UpdateConnectionState(message);
             }
             // otherwise ..
             else {
-                Console.WriteLine($"[s] new connection from {message.Sender}!");
+                Logger.Log($"[s] new connection from {message.Sender}!");
 
                 // .. if the message intent is to begin a connection, 
                 // .. and a connection is allowed, begin a connection

@@ -11,6 +11,7 @@ using TileBasedSurvivalGame.Networking;
 // = per-step working comments
 
 using static TileBasedSurvivalGame.Helper;
+using System.Collections.Concurrent;
 
 namespace TileBasedSurvivalGame {
     internal class Program {
@@ -47,6 +48,12 @@ namespace TileBasedSurvivalGame {
             client.Construct(400, 225, 2, 2);
 
             client.Start();
+        }
+    }
+
+    static class Logger {
+        public static void Log(object message) {
+            Console.WriteLine(message);
         }
     }
 }

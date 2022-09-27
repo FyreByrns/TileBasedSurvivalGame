@@ -44,7 +44,7 @@ namespace TileBasedSurvivalGame {
                 return numericalAnswer;
             }
             else {
-                Console.WriteLine("Invalid integer, please try again.");
+                Logger.Log("Invalid integer, please try again.");
                 return Ask(numericalAnswerQuestion, defaultAnswer);
             }
         }

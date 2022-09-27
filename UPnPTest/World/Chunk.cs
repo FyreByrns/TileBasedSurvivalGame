@@ -2,7 +2,7 @@
 
 namespace TileBasedSurvivalGame.World {
     class Chunk {
-        //// x, y, and z dimensions
+        //// x and y dimensions
         public static int Size = 30;
 
         public TileMap Tiles { get; private set; }

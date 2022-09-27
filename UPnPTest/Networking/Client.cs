@@ -58,9 +58,9 @@ namespace TileBasedSurvivalGame.Networking {
                 }
                 player.Name = MostRecentMessage.RawData.Get<string>(ref readIndex);
 
-                Console.WriteLine("players:");
+                Logger.Log("players:");
                 foreach (Player p in Players) {
-                    Console.WriteLine($"\t{p.ID}:{p.Remote}:{p.Name}");
+                    Logger.Log($"\t{p.ID}:{p.Remote}:{p.Name}");
                 }
 
                 return;
@@ -163,7 +163,7 @@ namespace TileBasedSurvivalGame.Networking {
                             int globalX = MostRecentMessage.RawData.Get<int>(ref readIndex);
                             int globalY = MostRecentMessage.RawData.Get<int>(ref readIndex);
                             int globalZ = MostRecentMessage.RawData.Get<int>(ref readIndex);
-                            Location global = new Location(globalX, globalY, globalZ);
+                            Location global = new Location(globalX, globalY);
                             string tile = MostRecentMessage.RawData.Get<string>(ref readIndex);
 
                             World.SetTile(Location.ToChunk(global), Location.ToTile(global), TileTypeHandler.CreateTile(tile), false, true);
@@ -180,8 +180,8 @@ namespace TileBasedSurvivalGame.Networking {
             int ts = TileRenderingHandler.TileSize;
             int mouseGlobalX = MouseX / ts;
             int mouseGlobalY = MouseY / ts;
-            Location mouseChunk = Location.ToChunk(CameraLocation + new Location(mouseGlobalX, mouseGlobalY, 0));
-            Location mouseTile = Location.ToTile(CameraLocation + new Location(mouseGlobalX, mouseGlobalY, 0));
+            Location mouseChunk = Location.ToChunk(CameraLocation + new Location(mouseGlobalX, mouseGlobalY));
+            Location mouseTile = Location.ToTile(CameraLocation + new Location(mouseGlobalX, mouseGlobalY));
 
             int camXChange = 0;
             int camYChange = 0;
@@ -189,10 +189,9 @@ namespace TileBasedSurvivalGame.Networking {
             if (GetKey(Key.S).Down) { camYChange += 1; }
             if (GetKey(Key.A).Down) { camXChange -= 1; }
             if (GetKey(Key.D).Down) { camXChange += 1; }
-            CameraLocation += new Location(camXChange, camYChange, 0);
-            if (CameraLocation.X < 0) CameraLocation = new Location(0, CameraLocation.Y, CameraLocation.Z);
-            if (CameraLocation.Y < 0) CameraLocation = new Location(CameraLocation.X, 0, CameraLocation.Z);
-            if (CameraLocation.Z < 0) CameraLocation = new Location(CameraLocation.X, CameraLocation.Y, 0);
+            CameraLocation += new Location(camXChange, camYChange);
+            if (CameraLocation.X < 0) CameraLocation = new Location(0, CameraLocation.Y);
+            if (CameraLocation.Y < 0) CameraLocation = new Location(CameraLocation.X, 0);
 
 
             if (GetMouse(Mouse.Left).Down) {
@@ -219,7 +218,6 @@ namespace TileBasedSurvivalGame.Networking {
             ByteList data = new ByteList();
             data.Append(global.X);
             data.Append(global.Y);
-            data.Append(global.Z);
             data.Append(tile.Type);
 
             if (!fromServer) {
