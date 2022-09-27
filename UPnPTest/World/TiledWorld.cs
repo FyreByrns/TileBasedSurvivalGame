@@ -2,7 +2,7 @@
 
 namespace TileBasedSurvivalGame.World {
     //// chunked tiled world, arbitrary height
-    class TiledWorld : Tickable{
+    class TiledWorld : ITickable{
         public delegate void WorldChangeEventHandler(Location chunkLoc, Location tileLoc, Tile tile, bool fromServer);
         public event WorldChangeEventHandler WorldChange;
 

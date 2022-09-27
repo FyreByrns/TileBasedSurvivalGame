@@ -16,7 +16,7 @@ using System.Linq;
 using TileBasedSurvivalGame.World;
 
 namespace TileBasedSurvivalGame.Networking {
-    class Server : Tickable {
+    class Server : ITickable {
         public enum ServersideClientState {
             None,
 

@@ -13,7 +13,7 @@ using TileBasedSurvivalGame.World;
 using TileBasedSurvivalGame.Rendering;
 
 namespace TileBasedSurvivalGame.Networking {
-    class Client : Tickable {
+    class Client : ITickable {
         public enum ClientsideClientState {
             None,
 

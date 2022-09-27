@@ -55,7 +55,7 @@ namespace TileBasedSurvivalGame {
         }
     }
 
-    interface Tickable {
+    interface ITickable {
         void Tick(Engine context);
     }
 
