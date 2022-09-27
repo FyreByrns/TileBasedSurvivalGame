@@ -13,7 +13,7 @@ using TileBasedSurvivalGame.World;
 using TileBasedSurvivalGame.Rendering;
 
 namespace TileBasedSurvivalGame.Networking {
-    class Client : Game {
+    class Client : Tickable {
         public enum ClientsideClientState {
             None,
 
@@ -174,27 +174,22 @@ namespace TileBasedSurvivalGame.Networking {
             }
         }
 
-        public override void OnUpdate(float elapsed) {
-            base.OnUpdate(elapsed);
+        public void Tick(Engine context) {
 
             int ts = TileRenderingHandler.TileSize;
-            int mouseGlobalX = MouseX / ts;
-            int mouseGlobalY = MouseY / ts;
+            int mouseGlobalX = context.MouseX / ts;
+            int mouseGlobalY = context.MouseY / ts;
             Location mouseChunk = Location.ToChunk(CameraLocation + new Location(mouseGlobalX, mouseGlobalY));
             Location mouseTile = Location.ToTile(CameraLocation + new Location(mouseGlobalX, mouseGlobalY));
 
             int camXChange = 0;
             int camYChange = 0;
-            if (GetKey(Key.W).Down) { camYChange -= 1; }
-            if (GetKey(Key.S).Down) { camYChange += 1; }
-            if (GetKey(Key.A).Down) { camXChange -= 1; }
-            if (GetKey(Key.D).Down) { camXChange += 1; }
             CameraLocation += new Location(camXChange, camYChange);
             if (CameraLocation.X < 0) CameraLocation = new Location(0, CameraLocation.Y);
             if (CameraLocation.Y < 0) CameraLocation = new Location(CameraLocation.X, 0);
 
 
-            if (GetMouse(Mouse.Left).Down) {
+            if (context.GetMouse(Mouse.Left).Down) {
                 World.SetTile(mouseChunk, mouseTile, TileTypeHandler.CreateTile("test"));
             }
 
@@ -202,7 +197,7 @@ namespace TileBasedSurvivalGame.Networking {
             UpdateState();
 
             // render
-            Camera.Render(this, CameraLocation);
+            Camera.Render(context, CameraLocation);
         }
 
         public Client() {

@@ -18,7 +18,6 @@ namespace TileBasedSurvivalGame.Networking {
         public static IPAddress ServerIP { get; private set; }
         public static int ServerPort { get; private set; }
         public static IPEndPoint ServerEP => new IPEndPoint(ServerIP, ServerPort);
-        public static Server IntegratedServer { get; private set; }
 
         private static UdpClient server;
         private static UdpClient client;
@@ -84,7 +83,6 @@ namespace TileBasedSurvivalGame.Networking {
         public static void Setup(IPAddress serverIP, int serverPort, bool client, bool server) {
             ServerIP = serverIP;
             ServerPort = serverPort;
-            IntegratedServer = new Server();
             StartListening(client, server);
 
             ServerMessage += NetHandler_Message;

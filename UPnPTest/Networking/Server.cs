@@ -16,7 +16,7 @@ using System.Linq;
 using TileBasedSurvivalGame.World;
 
 namespace TileBasedSurvivalGame.Networking {
-    class Server {
+    class Server : Tickable {
         public enum ServersideClientState {
             None,
 
@@ -62,16 +62,6 @@ namespace TileBasedSurvivalGame.Networking {
         }
         public IEnumerable<PlayerID> GetPlayerIDs() {
             return _endpoints.Keys;
-        }
-
-        public Server() {
-            _rng = new Random((int)DateTime.Now.Ticks);
-            NetHandler.ServerMessage += Server_MessageReceived;
-
-            _endpoints = new Dictionary<PlayerID, IPEndPoint>();
-            _IDs = new Dictionary<IPEndPoint, PlayerID>();
-            _states = new Dictionary<PlayerID, ServersideClientState>();
-            _players = new List<Player>();
         }
 
         void RegisterNewClient(PlayerID playerID, NetMessage originator) {
@@ -173,6 +163,20 @@ namespace TileBasedSurvivalGame.Networking {
                         }
                 }
             });
+        }
+
+        public void Tick(Engine context) {
+            World.Tick(context);
+        }
+
+        public Server() {
+            _rng = new Random((int)DateTime.Now.Ticks);
+            NetHandler.ServerMessage += Server_MessageReceived;
+
+            _endpoints = new Dictionary<PlayerID, IPEndPoint>();
+            _IDs = new Dictionary<IPEndPoint, PlayerID>();
+            _states = new Dictionary<PlayerID, ServersideClientState>();
+            _players = new List<Player>();
         }
 
         private void Server_MessageReceived(NetMessage message) {

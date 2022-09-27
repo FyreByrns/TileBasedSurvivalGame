@@ -2,7 +2,7 @@
 
 namespace TileBasedSurvivalGame.World {
     //// chunked tiled world, arbitrary height
-    class TiledWorld {
+    class TiledWorld : Tickable{
         public delegate void WorldChangeEventHandler(Location chunkLoc, Location tileLoc, Tile tile, bool fromServer);
         public event WorldChangeEventHandler WorldChange;
 
@@ -48,6 +48,10 @@ namespace TileBasedSurvivalGame.World {
             if (!silent) {
                 WorldChange?.Invoke(chunkLoc, tileLoc, tile, fromServer);
             }
+        }
+
+        public void Tick(Engine context) {
+
         }
     }
 }

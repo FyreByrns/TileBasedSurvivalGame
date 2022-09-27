@@ -3,6 +3,7 @@
 namespace TileBasedSurvivalGame.World {
     class Entity {
         public Location WorldLocation { get; set; }
+        public EntityController Controller { get; set; }
 
         public int Width { get; set; }
         public int Height { get; set; }
@@ -19,6 +20,15 @@ namespace TileBasedSurvivalGame.World {
                 && WorldLocation.Y + Height > other.WorldLocation.Y
                 && WorldLocation.X < other.WorldLocation.X + other.Width
                 && WorldLocation.Y < other.WorldLocation.Y + other.Height;
+        }
+    }
+
+    class EntityController {
+        public virtual void Update(TiledWorld world) { }
+    }
+    class PlayerController : EntityController {
+        public override void Update(TiledWorld world) {
+            base.Update(world);
         }
     }
 }

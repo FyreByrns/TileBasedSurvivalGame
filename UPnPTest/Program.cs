@@ -44,10 +44,36 @@ namespace TileBasedSurvivalGame {
 
             // setup client
             Client client = new Client();
-            // todo: load values from config files
-            client.Construct(400, 225, 2, 2);
 
-            client.Start();
+            Server server = null;
+            if (hosting) {
+                server = new Server();
+            }
+
+            Engine engine = new Engine(client, server);
+            engine.Start();
+        }
+    }
+
+    interface Tickable {
+        void Tick(Engine context);
+    }
+
+    class Engine : PixelEngine.Game {
+        public Client Client { get; set; }
+        public Server Server { get; set; }
+
+        public override void OnUpdate(float elapsed) {
+            base.OnUpdate(elapsed);
+
+            Client.Tick(this);
+            Server?.Tick(this);
+        }
+
+        public Engine(Client client, Server server) {
+            Construct(400, 225, 2, 2);
+            Client = client;
+            Server = server;
         }
     }
 }

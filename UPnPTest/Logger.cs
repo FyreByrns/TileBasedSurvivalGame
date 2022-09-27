@@ -6,8 +6,12 @@
 
 namespace TileBasedSurvivalGame {
     static class Logger {
+        public static bool ShowLogs { get; set; } = false;
+
         public static void Log(object message) {
-            Console.WriteLine(message);
+            if (ShowLogs) {
+                Console.WriteLine(message);
+            }
         }
     }
 }
