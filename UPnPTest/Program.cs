@@ -50,10 +50,4 @@ namespace TileBasedSurvivalGame {
             client.Start();
         }
     }
-
-    static class Logger {
-        public static void Log(object message) {
-            Console.WriteLine(message);
-        }
-    }
 }
