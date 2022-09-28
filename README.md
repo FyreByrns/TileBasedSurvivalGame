@@ -2,8 +2,8 @@ I'm currently working on a hobby game project.
 When complete it will have:
 ```
 ╭──────────────╮
-│- in progress │
-│+ done        │
+│o in progress │
+│x done        │
 ╰──────────────╯
 o graphics
 ┋
