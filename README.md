@@ -38,3 +38,5 @@ o gameplay
 ┋
 ```
 The current working title is TileBasedSurvivalGame.
+
+I'm using my own fork of [a C# port](github.com/DevChrome/Pixel-Engine) of [Javidx9's](https://onelonecoder.com/) ([his YouTube channel](https://www.youtube.com/channel/UC-yuWVUplUJZvieEligKBkA)) [olcPixelGameEngine](https://github.com/OneLoneCoder/olcPixelGameEngine) ([OLC-3 License](https://github.com/DevChrome/Pixel-Engine/blob/master/Licences.txt)).
