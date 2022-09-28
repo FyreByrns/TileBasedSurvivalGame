@@ -1,6 +1,4 @@
-﻿#define DUMB_PARALLEL_DRAW
-
-using PixelEngine;
+﻿using PixelEngine;
 using TileBasedSurvivalGame.Networking;
 
 //// = documentation
@@ -43,6 +41,8 @@ namespace TileBasedSurvivalGame {
         }
 
         public Engine(Client client, Server server) {
+            DUMB_PARALLEL_DRAW = true;
+
             Construct(400, 225, 2, 2);
             Client = client;
             Server = server;
