@@ -4,7 +4,7 @@ using tri = TileBasedSurvivalGame.Rendering.TileRenderingHandler.TileRenderingIn
 
 namespace TileBasedSurvivalGame.Rendering {
     public static class TileRenderingHandler {
-        public const int TileSize = 5;
+        public const int TileSize = 10;
 
         //// for convenience
         static Pixel c(byte r, byte g, byte b) => new Pixel(r, g, b);

@@ -1,13 +1,13 @@
-﻿
+﻿#define DUMB_PARALLEL_DRAW
+
 using PixelEngine;
 using TileBasedSurvivalGame.Networking;
 
 //// = documentation
 // = per-step working comments
 
-
 namespace TileBasedSurvivalGame {
-    class Engine : PixelEngine.Game {
+    class Engine : Game {
         public Client Client { get; set; }
         public Server Server { get; set; }
 
@@ -26,6 +26,7 @@ namespace TileBasedSurvivalGame {
             for (Key key = 0; key < Key.Any; key++) {
                 keys[(int)key] = GetKey(key).Down;
             }
+            InputHandler.UpdateMouse(MouseX, MouseY, (int)MouseScroll);
             InputHandler.Update(mouseButtons, keys);
 
             // fixed tick rate
@@ -36,6 +37,9 @@ namespace TileBasedSurvivalGame {
 
                 _tickAccumulator -= TickLength;
             }
+
+            // render
+            Client.Camera.Render(this, Client.CameraLocation);
         }
 
         public Engine(Client client, Server server) {

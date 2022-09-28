@@ -19,6 +19,10 @@ namespace TileBasedSurvivalGame {
         public static int[] Keys
         = new int[(int)Key.Any];
 
+        public static int MouseX { get; private set; }
+        public static int MouseY { get; private set; }
+        public static int MouseScroll { get; private set; }
+
         public static IEnumerable<string> BoundTo(Mouse button) {
             if (Bind.Bound(button)) {
                 foreach (string input in Binds.Keys) {
@@ -44,6 +48,30 @@ namespace TileBasedSurvivalGame {
             }
         }
 
+        public static void BindInput(string name, Mouse button) {
+            name = name.ToLower(); // don't worry about accidental capitals
+
+            if (!Binds.ContainsKey(name)) {
+                Binds[name] = new Bind(name);
+            }
+
+            Binds[name].AddBind(button);
+        }
+        public static void BindInput(string name, Key key) {
+            name = name.ToLower();
+
+            if (!Binds.ContainsKey(name)) {
+                Binds[name] = new Bind(name);
+            }
+
+            Binds[name].AddBind(key);
+        }
+
+        public static void UpdateMouse(int mouseX, int mouseY, int scroll) {
+            MouseX = mouseX;
+            MouseY = mouseY;
+            MouseScroll = scroll;
+        }
         public static void Update(bool[] mouseButtons, bool[] keys) {
             for (int button = 0; button < MouseButtons.Length; button++) {
                 if (mouseButtons[button]) { // if the key is down

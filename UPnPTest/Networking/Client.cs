@@ -175,13 +175,6 @@ namespace TileBasedSurvivalGame.Networking {
         }
 
         public void Tick(Engine context) {
-
-            int ts = TileRenderingHandler.TileSize;
-            int mouseGlobalX = context.MouseX / ts;
-            int mouseGlobalY = context.MouseY / ts;
-            Location mouseChunk = Location.ToChunk(CameraLocation + new Location(mouseGlobalX, mouseGlobalY));
-            Location mouseTile = Location.ToTile(CameraLocation + new Location(mouseGlobalX, mouseGlobalY));
-
             int camXChange = 0;
             int camYChange = 0;
             CameraLocation += new Location(camXChange, camYChange);
@@ -190,14 +183,12 @@ namespace TileBasedSurvivalGame.Networking {
 
 
             if (context.GetMouse(Mouse.Left).Down) {
-                World.SetTile(mouseChunk, mouseTile, TileTypeHandler.CreateTile("test"));
             }
 
             // handle state, state changes
             UpdateState();
 
-            // render
-            Camera.Render(context, CameraLocation);
+
         }
 
         public Client() {
@@ -205,6 +196,20 @@ namespace TileBasedSurvivalGame.Networking {
             CurrentState = ClientsideClientState.None;
             Camera = new Camera(World);
             World.WorldChange += World_WorldChange;
+
+            // temporary debug world changing
+            InputHandler.BindInput("mouse_left", Mouse.Left);
+            InputHandler.Input += (string input, int held) => {
+                if (input == "mouse_left") {
+                    int ts = TileRenderingHandler.TileSize;
+                    int mouseGlobalX = InputHandler.MouseX / ts;
+                    int mouseGlobalY = InputHandler.MouseY / ts;
+                    Location mouseChunk = Location.ToChunk(CameraLocation + new Location(mouseGlobalX, mouseGlobalY));
+                    Location mouseTile = Location.ToTile(CameraLocation + new Location(mouseGlobalX, mouseGlobalY));
+
+                    World.SetTile(mouseChunk, mouseTile, TileTypeHandler.CreateTile("test"));
+                }
+            };
         }
 
         private void World_WorldChange(Location chunkLoc, Location tileLoc, Tile tile, bool fromServer) {
