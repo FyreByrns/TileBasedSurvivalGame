@@ -29,7 +29,7 @@ namespace TileBasedSurvivalGame {
 
             // fixed tick rate
             _tickAccumulator += elapsed;
-            while (_tickAccumulator > TickLength) {
+            while (_tickAccumulator > TickLength) { 
                 Client.Tick(this);
                 Server?.Tick(this);
 
