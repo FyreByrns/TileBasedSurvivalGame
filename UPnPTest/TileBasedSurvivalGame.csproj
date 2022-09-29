@@ -63,8 +63,10 @@
     <Compile Include="Rendering\TileRenderingHandler.cs" />
     <Compile Include="World\Barrier.cs" />
     <Compile Include="World\Chunk.cs" />
-    <Compile Include="World\Entity.cs" />
+    <Compile Include="World\Entity\Entity.cs" />
+    <Compile Include="World\Entity\EntityController.cs" />
     <Compile Include="World\Location.cs" />
+    <Compile Include="World\Entity\PlayerController.cs" />
     <Compile Include="World\Tile.cs" />
     <Compile Include="World\TiledWorld.cs" />
     <Compile Include="World\TileTypeHandler.cs" />

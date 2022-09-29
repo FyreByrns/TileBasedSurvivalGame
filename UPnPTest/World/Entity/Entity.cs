@@ -22,13 +22,4 @@ namespace TileBasedSurvivalGame.World {
                 && WorldLocation.Y < other.WorldLocation.Y + other.Height;
         }
     }
-
-    class EntityController {
-        public virtual void Update(TiledWorld world) { }
-    }
-    class PlayerController : EntityController {
-        public override void Update(TiledWorld world) {
-            base.Update(world);
-        }
-    }
 }
