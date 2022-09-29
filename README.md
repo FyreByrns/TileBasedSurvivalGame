@@ -6,15 +6,35 @@ When complete it will have:
 │x done        │
 ╰──────────────╯
 o graphics
+╠═o pixelart top-down
+║ ├─o tile-based
+║ └─o procedural plant graphics
 ┋
 o worlds
 ╠═o multiplayer system
-╠═o NPCs
+╠═o NPC entities
+║ ├─o have the same abilities as players
+║ │ └─o (competent AI)
 ║ ├─o animals
 ║ ├─o peoples
 ║ └─o monsters 😲
 ┋
 o gameplay
+╠═o systemic
+║ ├─o interactions defined as "options -> results" instead of "if -> then"
+║ ├─o weather
+║ │ ├─o seasons
+║ │ ├─o temperature
+║ │ ├─o moisture
+║ │ └─o audio
+║ └─o world-event system
+║   ├─o series of "listeners" for events
+║   └─o everything that happens in the world fires off an event
+║     ├─o of a certain type
+║     └─o of a certain radius
+║       └─o radius could be modified
+║         ├─o by weather
+║         └─o by entity skill (?)
 ╠═o as interconnected magic systems as I can cram in
 ║ ├─o rune
 ║ ├─o circle
@@ -26,16 +46,16 @@ o gameplay
 ║ ├─o herb
 ║ └─o alchemy
 ╠═o herbcraft
-║   o procedurally generated plants
-║   ├─o effects
-║   ├─o biome
-║   └─o shape
-║   o plant research via experimentation
-║   o crossbreeding
+║ ├─o procedurally generated plants
+║ │ ├─o effects
+║ │ ├─o biome
+║ │ └─o shape
+║ ├─o plant research via experimentation
+║ └─o crossbreeding
 ║   ├─o grafting
 ║   ├─o cross-pollination
 ║   └─o magical mutations
-┋
+┋ 
 ```
 The current working title is TileBasedSurvivalGame.
 
