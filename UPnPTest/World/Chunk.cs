@@ -1,4 +1,5 @@
 ﻿using TileMap = System.Collections.Generic.Dictionary<TileBasedSurvivalGame.World.Location, TileBasedSurvivalGame.World.Tile>;
+using EntityList = System.Collections.Generic.HashSet<TileBasedSurvivalGame.World.Entity>;
 
 namespace TileBasedSurvivalGame.World {
     class Chunk {
@@ -7,6 +8,9 @@ namespace TileBasedSurvivalGame.World {
 
         public TileMap Tiles { get; private set; }
         = new TileMap();
+
+        public EntityList ChunkLocalEntities { get; }
+        = new EntityList();
 
         public Tile GetTile(Location tileLocation) {
             if (Tiles.ContainsKey(tileLocation)) {

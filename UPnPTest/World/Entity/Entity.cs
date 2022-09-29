@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using ChunkList = System.Collections.Generic.HashSet<TileBasedSurvivalGame.World.Chunk>;
 
 namespace TileBasedSurvivalGame.World {
     class Entity {
         public Location WorldLocation { get; set; }
+        public ChunkList InhabitedChunks { get; }
+        = new ChunkList();
         public EntityController Controller { get; set; }
 
         public int Width { get; set; }
