@@ -6,6 +6,8 @@ namespace TileBasedSurvivalGame.World {
     class TiledWorld : ITickable {
         public delegate void WorldChangeEventHandler(Location chunkLoc, Location tileLoc, Tile tile, bool fromServer);
         public event WorldChangeEventHandler WorldChange;
+        public delegate void EntityMovedEventHandler(Entity entity, Location worldFrom, Location worldTo);
+        public event EntityMovedEventHandler EntityMoved;
 
         public ChunkMap Chunks { get; private set; }
         = new ChunkMap();
@@ -98,6 +100,9 @@ namespace TileBasedSurvivalGame.World {
                 // .. knockback ever be desired
                 // todo: move movement resolution to own method
 
+                // store old location
+                Location oldLocation = entity.WorldLocation;
+
                 // check if the new location overlaps anything solid
                 bool moveSuccess = true;
                 for (int newBodyX = 0; newBodyX < entity.Width; newBodyX++) {
@@ -109,7 +114,6 @@ namespace TileBasedSurvivalGame.World {
                         Tile tileAt = GetTile(newBodyChunk, newBodyTile);
                         if (tileAt != null) {
                             if (TileTypeHandler.Solid(tileAt.Type)) {
-                                System.Console.WriteLine(tileAt.Type);
                                 moveSuccess = false;
                                 // todo: early exit
                             }
@@ -119,6 +123,7 @@ namespace TileBasedSurvivalGame.World {
 
                 if (moveSuccess) {
                     entity.WorldLocation = entity.Controller.DesiredLocation;
+                    EntityMoved?.Invoke(entity, oldLocation, entity.WorldLocation);
                     // todo: propagate footstep event for the movement
                 }
 

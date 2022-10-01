@@ -193,6 +193,7 @@ namespace TileBasedSurvivalGame.Networking {
             CurrentState = ClientsideClientState.None;
             Camera = new Camera();
             World.WorldChange += Camera.WorldChanged;
+            World.EntityMoved += Camera.EntityMoved;
             World.WorldChange += World_WorldChange;
 
             // temporary debug world changing

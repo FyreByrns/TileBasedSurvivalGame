@@ -54,7 +54,6 @@ namespace TileBasedSurvivalGame.Rendering {
             foreach (Entity entity in world.Entities) {
                 for (int bodyX = 0; bodyX < entity.Width; bodyX++) {
                     for (int bodyY = 0; bodyY < entity.Height; bodyY++) {
-                        Console.WriteLine($"{{{entity.WorldLocation.X},{entity.WorldLocation.Y}}}");
                         context.DrawRect(new Point((bodyX + entity.WorldLocation.X - location.X) * ts, (bodyY + entity.WorldLocation.Y - location.Y) * ts), ts, ts, Pixel.Presets.Red);
                     }
                 }
@@ -67,6 +66,10 @@ namespace TileBasedSurvivalGame.Rendering {
 
         public void WorldChanged(Location chunkLoc, Location tileLoc, Tile tile, bool fromServer) {
             InvalidateCache();
+        }
+
+        public void EntityMoved(Entity entity, Location worldFrom, Location worldTo) {
+            _changesSinceLastFrame = true;
         }
     }
 }
