@@ -18,8 +18,8 @@ namespace TileBasedSurvivalGame.World {
             // instead of a switch statement, use a simple map
             InputMap inputMethods
             = new InputMap() {
-                { "move_up"  , () => { desiredMovementY--; } },
-                { "move_down", () => { desiredMovementY++; } },
+                { "move_north"  , () => { desiredMovementY--; } },
+                { "move_south", () => { desiredMovementY++; } },
                 { "move_west", () => { desiredMovementX--; } },
                 { "move_east", () => { desiredMovementX++; } },
             };

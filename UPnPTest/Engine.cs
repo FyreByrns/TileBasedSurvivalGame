@@ -6,6 +6,9 @@ using TileBasedSurvivalGame.Networking;
 
 namespace TileBasedSurvivalGame {
     class Engine : Game {
+        // singleton
+        public static Engine Instance { get; private set; }
+
         public Client Client { get; set; }
         public Server Server { get; set; }
 
@@ -29,23 +32,30 @@ namespace TileBasedSurvivalGame {
 
             // fixed tick rate
             _tickAccumulator += elapsed;
-            while (_tickAccumulator > TickLength) { 
+            while (_tickAccumulator > TickLength) {
                 Client.Tick(this);
                 Server?.Tick(this);
 
                 _tickAccumulator -= TickLength;
             }
 
-            // render
+            // render chunks
             Client.Camera.Render(this, Client.CameraLocation);
         }
 
         public Engine(Client client, Server server) {
+            Instance = this;
             DUMB_PARALLEL_DRAW = true;
 
             Construct(400, 225, 2, 2);
             Client = client;
             Server = server;
+
+            // temporary bindings here, todo: load bindings from file in InputHandler sctor
+            InputHandler.BindInput("move_north", Key.Up);
+            InputHandler.BindInput("move_south", Key.Down);
+            InputHandler.BindInput("move_west", Key.Left);
+            InputHandler.BindInput("move_east", Key.Right);
         }
     }
 }

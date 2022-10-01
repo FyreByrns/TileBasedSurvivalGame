@@ -20,7 +20,7 @@ namespace TileBasedSurvivalGame.World {
         }
 
         public System.Collections.Generic.IEnumerable<Chunk> GetChunks(params Location[] chunkLocations) {
-            foreach(Location loc in chunkLocations) {
+            foreach (Location loc in chunkLocations) {
                 yield return GetChunk(loc);
             }
         }
@@ -65,6 +65,10 @@ namespace TileBasedSurvivalGame.World {
         // .. if it is, the fix is relatively simple
         // .. I just don't want to deal with it
         void UpdateChunkInhabitantList(Entity entity) {
+            foreach (Chunk previousChunk in entity.InhabitedChunks) {
+                previousChunk.ChunkLocalEntities.Remove(entity);
+            }
+
             entity.InhabitedChunks.Clear();
             // just using the corners should be fine (see note above)
             Location northWestCornerChunk = Location.ToChunk(entity.WorldLocation);
@@ -92,29 +96,27 @@ namespace TileBasedSurvivalGame.World {
                 // resolve any desired movement
                 // current method of movement will need to be reconsidered should
                 // .. knockback ever be desired
-                if (entity.Controller.DesiredLocation != entity.WorldLocation) {
-                    // todo: move movement resolution to own method
+                // todo: move movement resolution to own method
 
-                    // check if the new location overlaps anything solid
-                    bool moveSuccess = true;
-                    for (int newBodyX = 0; newBodyX < entity.Width; newBodyX++) {
-                        for (int newBodyY = 0; newBodyY < entity.Height; newBodyY++) {
-                            Location newBodyLocation = new Location(newBodyX, newBodyY) + entity.Controller.DesiredLocation;
-                            Location newBodyChunk = Location.ToChunk(newBodyLocation);
-                            Location newBodyTile = Location.ToTile(newBodyLocation);
+                // check if the new location overlaps anything solid
+                bool moveSuccess = true;
+                for (int newBodyX = 0; newBodyX < entity.Width; newBodyX++) {
+                    for (int newBodyY = 0; newBodyY < entity.Height; newBodyY++) {
+                        Location newBodyLocation = new Location(newBodyX, newBodyY) + entity.Controller.DesiredLocation;
+                        Location newBodyChunk = Location.ToChunk(newBodyLocation);
+                        Location newBodyTile = Location.ToTile(newBodyLocation);
 
-                            Tile tileAt = GetTile(newBodyChunk, newBodyTile);
-                            if (TileTypeHandler.Solid(tileAt.Type)) {
-                                moveSuccess = false;
-                                // todo: early exit
-                            }
+                        Tile tileAt = GetTile(newBodyChunk, newBodyTile);
+                        if (TileTypeHandler.Solid(tileAt?.Type ?? "air")) {
+                            moveSuccess = false;
+                            // todo: early exit
                         }
                     }
+                }
 
-                    if (moveSuccess) {
-                        entity.WorldLocation = entity.Controller.DesiredLocation;
-                        // todo: propagate footstep event for the movement
-                    }
+                if (moveSuccess) {
+                    entity.WorldLocation = entity.Controller.DesiredLocation;
+                    // todo: propagate footstep event for the movement
                 }
 
                 // while we're looping through entities, might as well do this too
@@ -122,5 +124,12 @@ namespace TileBasedSurvivalGame.World {
             }
         }
         void TickWorld() { }
+
+        public TiledWorld() {
+            // temporary player spawn
+            Entity player = new Entity(new Location(4, 4));
+            player.Controller = new PlayerController(player);
+            Entities.Add(player);
+        }
     }
 }

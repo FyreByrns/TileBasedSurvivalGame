@@ -1,5 +1,6 @@
 ﻿using PixelEngine;
 using System;
+using System.Linq;
 using FSerialization;
 
 //// = documentation
@@ -181,14 +182,8 @@ namespace TileBasedSurvivalGame.Networking {
             if (CameraLocation.X < 0) CameraLocation = new Location(0, CameraLocation.Y);
             if (CameraLocation.Y < 0) CameraLocation = new Location(CameraLocation.X, 0);
 
-
-            if (context.GetMouse(Mouse.Left).Down) {
-            }
-
             // handle state, state changes
             UpdateState();
-
-
         }
 
         public Client() {
