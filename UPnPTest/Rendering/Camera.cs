@@ -16,25 +16,8 @@ namespace TileBasedSurvivalGame.Rendering {
         // caching things
         Location _lastLocation;
         bool _changesSinceLastFrame;
-        Dictionary<Location, Sprite> CachedChunkGraphics { get; }
-        = new Dictionary<Location, Sprite>();
-        public void Cache(Location chunk, Sprite sprite) {
-            CachedChunkGraphics[chunk] = sprite;
-        }
-        public Sprite GetCachedSprite(Location chunk) {
-            if (Cached(chunk)) {
-                return CachedChunkGraphics[chunk];
-            }
-            return new Sprite(1, 1);
-        }
-        public bool Cached(Location chunk) {
-            return CachedChunkGraphics.ContainsKey(chunk);
-        }
-        public void InvalidateCache(Location chunk) {
+        public void InvalidateCache() {
             _changesSinceLastFrame = true;
-            if (Cached(chunk)) {
-                CachedChunkGraphics.Remove(chunk);
-            }
         }
 
         public void Render(Game context, Location location) {
@@ -91,7 +74,7 @@ namespace TileBasedSurvivalGame.Rendering {
         }
 
         private void WorldChanged(Location chunkLoc, Location tileLoc, Tile tile, bool fromServer) {
-            InvalidateCache(chunkLoc);
+            InvalidateCache();
         }
     }
 }
