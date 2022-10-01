@@ -107,9 +107,12 @@ namespace TileBasedSurvivalGame.World {
                         Location newBodyTile = Location.ToTile(newBodyLocation);
 
                         Tile tileAt = GetTile(newBodyChunk, newBodyTile);
-                        if (TileTypeHandler.Solid(tileAt?.Type ?? "air")) {
-                            moveSuccess = false;
-                            // todo: early exit
+                        if (tileAt != null) {
+                            if (TileTypeHandler.Solid(tileAt.Type)) {
+                                System.Console.WriteLine(tileAt.Type);
+                                moveSuccess = false;
+                                // todo: early exit
+                            }
                         }
                     }
                 }
@@ -124,12 +127,5 @@ namespace TileBasedSurvivalGame.World {
             }
         }
         void TickWorld() { }
-
-        public TiledWorld() {
-            // temporary player spawn
-            Entity player = new Entity(new Location(4, 4));
-            player.Controller = new PlayerController(player);
-            Entities.Add(player);
-        }
     }
 }

@@ -40,9 +40,9 @@ namespace TileBasedSurvivalGame {
             }
 
             // render chunks
-            Client.Camera.Render(this, Client.CameraLocation);
+            Client.Camera.Render(this, Client.World, Client.CameraLocation);
         }
-
+        
         public Engine(Client client, Server server) {
             Instance = this;
             DUMB_PARALLEL_DRAW = true;
@@ -50,6 +50,13 @@ namespace TileBasedSurvivalGame {
             Construct(400, 225, 2, 2);
             Client = client;
             Server = server;
+
+            // temporary player spawn
+            World.Entity player = new World.Entity(new World.Location(4, 4));
+            player.Width = 2;
+            player.Height = 2;
+            player.Controller = new World.PlayerController(player);
+            client.World.Entities.Add(player);
 
             // temporary bindings here, todo: load bindings from file in InputHandler sctor
             InputHandler.BindInput("move_north", Key.Up);

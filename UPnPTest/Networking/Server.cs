@@ -166,7 +166,7 @@ namespace TileBasedSurvivalGame.Networking {
         }
 
         public void Tick(Engine context) {
-            World.Tick(context);
+            //World.Tick(context);
         }
 
         public Server() {

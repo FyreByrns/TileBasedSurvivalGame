@@ -9,8 +9,6 @@ using TileBasedSurvivalGame.World;
 
 namespace TileBasedSurvivalGame.Rendering {
     class Camera {
-        public TiledWorld World { get; }
-
         public int RenderingHeight { get; set; } = 10;
 
         // caching things
@@ -20,7 +18,7 @@ namespace TileBasedSurvivalGame.Rendering {
             _changesSinceLastFrame = true;
         }
 
-        public void Render(Game context, Location location) {
+        public void Render(Game context, TiledWorld world, Location location) {
             int ts = TileRenderingHandler.TileSize;
 
             if (location != _lastLocation || _changesSinceLastFrame) {
@@ -42,7 +40,7 @@ namespace TileBasedSurvivalGame.Rendering {
                         int chunkOffsetX = -(currentChunkCorner.X * ts - location.X * ts);
                         int chunkOffsetY = -(currentChunkCorner.Y * ts - location.Y * ts);
 
-                        Chunk chunk = World.GetChunk(currentChunk);
+                        Chunk chunk = world.GetChunk(currentChunk);
 
                         if (chunk.Graphics == null) {
                             // if there are no cached graphics, regenerate them
@@ -53,27 +51,21 @@ namespace TileBasedSurvivalGame.Rendering {
                 }
             }
 
-            // render entities todo: move to chunks once chunk local entity list has been fixed
-            foreach (Entity entity in World.Entities) {
+            foreach (Entity entity in world.Entities) {
                 for (int bodyX = 0; bodyX < entity.Width; bodyX++) {
                     for (int bodyY = 0; bodyY < entity.Height; bodyY++) {
+                        Console.WriteLine($"{{{entity.WorldLocation.X},{entity.WorldLocation.Y}}}");
                         context.DrawRect(new Point((bodyX + entity.WorldLocation.X - location.X) * ts, (bodyY + entity.WorldLocation.Y - location.Y) * ts), ts, ts, Pixel.Presets.Red);
                     }
                 }
             }
-
 
             context.PixelMode = Pixel.Mode.Normal;
             _lastLocation = location;
             _changesSinceLastFrame = false;
         }
 
-        public Camera(TiledWorld world) {
-            World = world;
-            World.WorldChange += WorldChanged;
-        }
-
-        private void WorldChanged(Location chunkLoc, Location tileLoc, Tile tile, bool fromServer) {
+        public void WorldChanged(Location chunkLoc, Location tileLoc, Tile tile, bool fromServer) {
             InvalidateCache();
         }
     }

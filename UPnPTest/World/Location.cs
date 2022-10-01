@@ -59,8 +59,8 @@
             }
             return false;
         }
-        public override int GetHashCode() {
-            return X.GetHashCode() ^ Y.GetHashCode();
-        }
+        //public override int GetHashCode() {
+        //    return X.GetHashCode() ^ Y.GetHashCode();
+        //}
     }
 }

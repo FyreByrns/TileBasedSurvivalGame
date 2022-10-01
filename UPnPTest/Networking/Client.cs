@@ -32,7 +32,7 @@ namespace TileBasedSurvivalGame.Networking {
         public NetMessage MostRecentMessage { get; private set; }
         PlayerList Players = new PlayerList();
 
-        public TiledWorld World { get; }
+        public TiledWorld World { get; set; }
         = new TiledWorld();
         public Location CameraLocation { get; set; }
         = Location.Zero;
@@ -184,12 +184,15 @@ namespace TileBasedSurvivalGame.Networking {
 
             // handle state, state changes
             UpdateState();
+
+            World.Tick(context);
         }
 
         public Client() {
             NetHandler.ClientMessage += NetHandler_ClientMessage;
             CurrentState = ClientsideClientState.None;
-            Camera = new Camera(World);
+            Camera = new Camera();
+            World.WorldChange += Camera.WorldChanged;
             World.WorldChange += World_WorldChange;
 
             // temporary debug world changing

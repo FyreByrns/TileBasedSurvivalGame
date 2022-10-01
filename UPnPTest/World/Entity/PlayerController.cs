@@ -8,6 +8,7 @@ namespace TileBasedSurvivalGame.World {
         }
 
         public PlayerController(Entity owner) : base(owner) {
+            DesiredLocation = owner.WorldLocation;
             InputHandler.Input += InputReceived;
         }
 
@@ -27,10 +28,10 @@ namespace TileBasedSurvivalGame.World {
             if (inputMethods.TryGetValue(input, out System.Action result)) {
                 // if the input is in the input map, resolve it
                 result.Invoke();
-            }
 
-            // inform that a movement is desired
-            DesiredLocation = new Location(desiredMovementX, desiredMovementY) + Owner.WorldLocation;
+                // inform that a movement is desired
+                DesiredLocation = new Location(desiredMovementX, desiredMovementY) + Owner.WorldLocation;
+            }
         }
     }
 }
