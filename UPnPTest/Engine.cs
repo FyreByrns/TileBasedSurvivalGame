@@ -40,6 +40,12 @@ namespace TileBasedSurvivalGame {
             }
 
             // render chunks
+            foreach(World.Chunk chunk in Client.World.Chunks.Values) {
+                if (chunk.Changed) {
+                    chunk.RegenerateGraphics();
+                }
+            }
+
             Client.Camera.Render(this, Client.World, Client.CameraLocation);
         }
         

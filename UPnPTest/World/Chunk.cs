@@ -13,6 +13,8 @@ namespace TileBasedSurvivalGame.World {
         //// x and y dimensions
         public static int Size = 30;
 
+        public bool Changed { get; private set; } = false;
+
         public TileMap Tiles { get; private set; }
         = new TileMap();
 
@@ -31,7 +33,7 @@ namespace TileBasedSurvivalGame.World {
             Tiles[tileLocation] = tile;
 
             // regenerate graphics
-            RegenerateGraphics();
+            Changed = true;
         }
 
         public void RegenerateGraphics() {
