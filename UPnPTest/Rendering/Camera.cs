@@ -69,7 +69,7 @@ namespace TileBasedSurvivalGame.Rendering {
         }
 
         public void EntityMoved(Entity entity, Location worldFrom, Location worldTo) {
-            _changesSinceLastFrame = true;
+            InvalidateCache();
         }
     }
 }
