@@ -202,7 +202,11 @@ namespace TileBasedSurvivalGame.Networking {
             World.Tick(context);
 
             // center camera on self
-            CameraLocation = GetPlayerByID(MyID)?.Entity?.WorldLocation ?? Location.Zero;
+            CameraLocation = GetPlayerByID(MyID)?.Entity?.WorldLocation 
+                - new Location(
+                    context.ScreenWidth / TileRenderingHandler.TileSize / 2,
+                    context.ScreenHeight / TileRenderingHandler.TileSize / 2
+                    )?? Location.Zero;
         }
 
         public Client() {
