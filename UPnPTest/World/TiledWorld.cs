@@ -92,39 +92,45 @@ namespace TileBasedSurvivalGame.World {
 
         void TickEntities() {
             foreach (Entity entity in Entities) {
-                // update controller
-                entity.Controller.Update(this);
+                // accumulate entity's tick accum
+                entity.Controller.TickAccumulator++;
+                // if the entity is allowed to move
+                if (entity.Controller.TicksBetweenMovement <= entity.Controller.TickAccumulator) {
+                    entity.Controller.TickAccumulator-= entity.Controller.TicksBetweenMovement;
+                    // update controller
+                    entity.Controller.Update(this);
 
-                // resolve any desired movement
-                // current method of movement will need to be reconsidered should
-                // .. knockback ever be desired
-                // todo: move movement resolution to own method
+                    // resolve any desired movement
+                    // current method of movement will need to be reconsidered should
+                    // .. knockback ever be desired
+                    // todo: move movement resolution to own method
 
-                // store old location
-                Location oldLocation = entity.WorldLocation;
+                    // store old location
+                    Location oldLocation = entity.WorldLocation;
 
-                // check if the new location overlaps anything solid
-                bool moveSuccess = true;
-                for (int newBodyX = 0; newBodyX < entity.Width; newBodyX++) {
-                    for (int newBodyY = 0; newBodyY < entity.Height; newBodyY++) {
-                        Location newBodyLocation = new Location(newBodyX, newBodyY) + entity.Controller.DesiredLocation;
-                        Location newBodyChunk = Location.ToChunk(newBodyLocation);
-                        Location newBodyTile = Location.ToTile(newBodyLocation);
+                    // check if the new location overlaps anything solid
+                    bool moveSuccess = true;
+                    for (int newBodyX = 0; newBodyX < entity.Width; newBodyX++) {
+                        for (int newBodyY = 0; newBodyY < entity.Height; newBodyY++) {
+                            Location newBodyLocation = new Location(newBodyX, newBodyY) + entity.Controller.DesiredLocation;
+                            Location newBodyChunk = Location.ToChunk(newBodyLocation);
+                            Location newBodyTile = Location.ToTile(newBodyLocation);
 
-                        Tile tileAt = GetTile(newBodyChunk, newBodyTile);
-                        if (tileAt != null) {
-                            if (TileTypeHandler.Solid(tileAt.Type)) {
-                                moveSuccess = false;
-                                // todo: early exit
+                            Tile tileAt = GetTile(newBodyChunk, newBodyTile);
+                            if (tileAt != null) {
+                                if (TileTypeHandler.Solid(tileAt.Type)) {
+                                    moveSuccess = false;
+                                    // todo: early exit
+                                }
                             }
                         }
                     }
-                }
 
-                if (moveSuccess) {
-                    entity.WorldLocation = entity.Controller.DesiredLocation;
-                    EntityMoved?.Invoke(entity, oldLocation, entity.WorldLocation);
-                    // todo: propagate footstep event for the movement
+                    if (moveSuccess) {
+                        entity.WorldLocation = entity.Controller.DesiredLocation;
+                        EntityMoved?.Invoke(entity, oldLocation, entity.WorldLocation);
+                        // todo: propagate footstep event for the movement
+                    }
                 }
 
                 // while we're looping through entities, might as well do this too

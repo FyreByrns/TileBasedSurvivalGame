@@ -10,6 +10,8 @@ namespace TileBasedSurvivalGame.World {
         public PlayerController(Entity owner) : base(owner) {
             DesiredLocation = owner.WorldLocation;
             InputHandler.Input += InputReceived;
+
+            TicksBetweenMovement = 10;
         }
 
         private void InputReceived(string input, int ticksHeld) {
