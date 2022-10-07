@@ -87,7 +87,7 @@ namespace TileBasedSurvivalGame.Networking {
                 }
             }
 
-            if(MostRecentMessage?.MessageIntent == PlayerSpawn) {
+            if (MostRecentMessage?.MessageIntent == PlayerSpawn) {
                 int readIndex = 0;
                 int id = MostRecentMessage.Get<int>(ref readIndex);
                 int globalX = MostRecentMessage.RawData.Get<int>(ref readIndex);
@@ -97,7 +97,7 @@ namespace TileBasedSurvivalGame.Networking {
                 Entity player = new Entity(new Location(globalX, globalY));
                 player.Controller = new PlayerController(player);
                 World.Entities.Add(player);
-                GetPlayerByID(MyID).Entity = player;
+                GetPlayerByID(id).Entity = player;
             }
 
             #endregion stateless actions
@@ -172,7 +172,7 @@ namespace TileBasedSurvivalGame.Networking {
                         break;
                     }
                 case InLobby: {
-                        if(MostRecentMessage?.MessageIntent == ServerTileChange) {
+                        if (MostRecentMessage?.MessageIntent == ServerTileChange) {
                             int readIndex = 0;
                             int originatingID = MostRecentMessage.RawData.Get<int>(ref readIndex);
                             int globalX = MostRecentMessage.RawData.Get<int>(ref readIndex);
@@ -202,11 +202,11 @@ namespace TileBasedSurvivalGame.Networking {
             World.Tick(context);
 
             // center camera on self
-            CameraLocation = GetPlayerByID(MyID)?.Entity?.WorldLocation 
+            CameraLocation = GetPlayerByID(MyID)?.Entity?.WorldLocation
                 - new Location(
                     context.ScreenWidth / TileRenderingHandler.TileSize / 2,
                     context.ScreenHeight / TileRenderingHandler.TileSize / 2
-                    )?? Location.Zero;
+                    ) ?? Location.Zero;
         }
 
         public Client() {
