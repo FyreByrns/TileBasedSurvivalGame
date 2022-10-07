@@ -31,6 +31,14 @@ namespace TileBasedSurvivalGame.Networking {
         // other
         public bool Blocked { get; private set; }
 
+        #region methods
+
+        public T Get<T>(ref int readIndex) {
+            return RawData.Get<T>(ref readIndex);
+        }
+
+        #endregion
+
         #region operators
 
         public override bool Equals(object obj) {
