@@ -1,6 +1,8 @@
 ﻿//// = documentation
 // = per-step working comments
 
+using TileBasedSurvivalGame.World;
+
 namespace TileBasedSurvivalGame.Networking {
     class Player {
         public string Name { get; set; }
@@ -10,6 +12,8 @@ namespace TileBasedSurvivalGame.Networking {
         public int ID { get; set; }
         //// whether this player represents a local player, or a player over the network
         public bool Remote { get; set; }
+
+        public Entity Entity { get; set; }
 
         public Player() { }
         public Player(int id, bool remote) {

@@ -38,7 +38,7 @@ namespace TileBasedSurvivalGame.Networking {
         = Location.Zero;
         public Camera Camera { get; set; }
 
-        Player GetPlayerByID(int id) {
+        public Player GetPlayerByID(int id) {
             foreach (Player player in Players) {
                 if (player.ID == id) {
                     return player;
@@ -85,6 +85,19 @@ namespace TileBasedSurvivalGame.Networking {
                     player = new Player(id, id != MyID);
                     Players.Add(player);
                 }
+            }
+
+            if(MostRecentMessage?.MessageIntent == PlayerSpawn) {
+                int readIndex = 0;
+                int id = MostRecentMessage.Get<int>(ref readIndex);
+                int globalX = MostRecentMessage.RawData.Get<int>(ref readIndex);
+                int globalY = MostRecentMessage.RawData.Get<int>(ref readIndex);
+
+                // spawn in
+                Entity player = new Entity(new Location(globalX, globalY));
+                player.Controller = new PlayerController(player);
+                World.Entities.Add(player);
+                GetPlayerByID(MyID).Entity = player;
             }
 
             #endregion stateless actions
@@ -152,6 +165,7 @@ namespace TileBasedSurvivalGame.Networking {
                                     data.ToArray()
                                     ));
                             }
+
                             // initial lobby connection done, state -> InLobby
                             CurrentState = InLobby;
                         }
@@ -186,6 +200,9 @@ namespace TileBasedSurvivalGame.Networking {
             UpdateState();
 
             World.Tick(context);
+
+            // center camera on self
+            CameraLocation = GetPlayerByID(MyID)?.Entity?.WorldLocation ?? Location.Zero;
         }
 
         public Client() {

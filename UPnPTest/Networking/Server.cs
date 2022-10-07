@@ -101,6 +101,21 @@ namespace TileBasedSurvivalGame.Networking {
                             data.Append(playerID);
                             data.Append(requestedName);
                             SendToAll(NetMessage.ConstructToSend(PlayerJoin, data.ToArray()));
+                            // .. spawn in the player
+                            if (player.Entity == null) {
+                                // .. todo: load player location etc from save
+                                Entity playerEntity = new Entity(Location.Zero); // for now just spawn at origin
+                                playerEntity.Controller = new PlayerController(playerEntity);
+                                player.Entity = playerEntity;
+                                World.Entities.Add(playerEntity);
+                            }
+
+                            data.Clear();
+                            data.Append(playerID);
+                            data.Append(player.Entity.WorldLocation.X);
+                            data.Append(player.Entity.WorldLocation.Y);
+                            SendToAll(NetMessage.ConstructToSend(PlayerSpawn, data.ToArray()));
+
                             break;
                         }
                     case InLobby: {
@@ -166,7 +181,7 @@ namespace TileBasedSurvivalGame.Networking {
         }
 
         public void Tick(Engine context) {
-            //World.Tick(context);
+            World.Tick(context);
         }
 
         public Server() {

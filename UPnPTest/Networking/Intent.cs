@@ -41,13 +41,17 @@ namespace TileBasedSurvivalGame.Networking {
             //// world state
             ClientTileChange,
             // == content ==
-            // int32 globalX, globalY, globalZ
+            // int32 globalX, globalY
             // string type
             ServerTileChange,
             // == content ==
             // int32 originating ID
-            // int32 globalX, globalY, globalZ,
+            // int32 globalX, globalY
             // string type
+            PlayerSpawn,
+            // == content ==
+            // int32 spawning ID
+            // int32 globalX, globalY
         }
     }
 
