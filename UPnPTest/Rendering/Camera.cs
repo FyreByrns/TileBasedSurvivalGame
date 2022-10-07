@@ -51,10 +51,12 @@ namespace TileBasedSurvivalGame.Rendering {
                 }
             }
 
-            foreach (Entity entity in world.Entities) {
-                for (int bodyX = 0; bodyX < entity.Width; bodyX++) {
-                    for (int bodyY = 0; bodyY < entity.Height; bodyY++) {
-                        context.DrawRect(new Point((bodyX + entity.WorldLocation.X - location.X) * ts, (bodyY + entity.WorldLocation.Y - location.Y) * ts), ts, ts, Pixel.Presets.Red);
+            lock (world.Entities) {
+                foreach (Entity entity in world.Entities) {
+                    for (int bodyX = 0; bodyX < entity.Width; bodyX++) {
+                        for (int bodyY = 0; bodyY < entity.Height; bodyY++) {
+                            context.DrawRect(new Point((bodyX + entity.WorldLocation.X - location.X) * ts, (bodyY + entity.WorldLocation.Y - location.Y) * ts), ts, ts, Pixel.Presets.Red);
+                        }
                     }
                 }
             }

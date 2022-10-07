@@ -23,5 +23,9 @@ namespace TileBasedSurvivalGame.World {
                 && WorldLocation.X < other.WorldLocation.X + other.Width
                 && WorldLocation.Y < other.WorldLocation.Y + other.Height;
         }
+
+        public override int GetHashCode() {
+            return WorldLocation.X.GetHashCode() ^ WorldLocation.Y.GetHashCode() ^ Width.GetHashCode() ^ Height.GetHashCode() ^ InhabitedChunks.GetHashCode();
+        }
     }
 }

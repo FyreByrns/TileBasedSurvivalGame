@@ -94,10 +94,12 @@ namespace TileBasedSurvivalGame.Networking {
                 int globalY = MostRecentMessage.RawData.Get<int>(ref readIndex);
 
                 // spawn in
-                Entity player = new Entity(new Location(globalX, globalY));
-                player.Controller = new PlayerController(player);
-                World.Entities.Add(player);
-                GetPlayerByID(id).Entity = player;
+                if (GetPlayerByID(id).Entity == null) {
+                    Entity player = new Entity(new Location(globalX, globalY));
+                    player.Controller = new PlayerController(player);
+                    World.Entities.Add(player);
+                    GetPlayerByID(id).Entity = player;
+                }
             }
 
             #endregion stateless actions
