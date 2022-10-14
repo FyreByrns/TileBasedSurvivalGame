@@ -13,9 +13,10 @@ namespace TileBasedSurvivalGame {
         public float TickLength { get; set; } = 1f / 30f;
         private float _tickAccumulator = 0;
 
-        private float _fpsPollAccumulator = 0;
-        private int _framesSinceLastPoll = 0;
         private int _fps;
+        private int _framesSinceLastPoll = 0;
+        private float _fpsPollAccumulator = 0;
+        private float _spf; // seconds per frame
 
         public override void OnCreate() {
             // default scene
@@ -28,11 +29,12 @@ namespace TileBasedSurvivalGame {
             Tick(elapsed);
             Render();
 
-            // fps tracking
+            // fps / spf tracking
             _framesSinceLastPoll++;
             _fpsPollAccumulator += elapsed;
             if(_fpsPollAccumulator >= 0.5f) {
                 _fps = _framesSinceLastPoll*2;
+                _spf = _fpsPollAccumulator / _framesSinceLastPoll;
                 _framesSinceLastPoll = 0;
                 _fpsPollAccumulator = 0;
             }
@@ -41,7 +43,7 @@ namespace TileBasedSurvivalGame {
             if(CurrentScene == null) {
                 Finish();
             }
-            AppName = $"~tbsg {_fps}fps {CurrentScene?.Name}";
+            AppName = $"~tbsg fps/spf {_fps:000}/{_spf:00.0000} {CurrentScene?.Name}";
         }
 
         void UpdateInput() {
