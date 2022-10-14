@@ -13,8 +13,13 @@ namespace TileBasedSurvivalGame {
         public float TickLength { get; set; } = 1f / 30f;
         private float _tickAccumulator = 0;
 
+        private float _fpsPollAccumulator = 0;
+        private int _framesSinceLastPoll = 0;
+        private int _fps;
+
         public override void OnCreate() {
-            
+            // default scene
+            CurrentScene = new AbstractWorldGenVisualizer();
         }
 
         public override void OnUpdate(float elapsed) {
@@ -22,6 +27,21 @@ namespace TileBasedSurvivalGame {
             Update(elapsed);
             Tick(elapsed);
             Render();
+
+            // fps tracking
+            _framesSinceLastPoll++;
+            _fpsPollAccumulator += elapsed;
+            if(_fpsPollAccumulator >= 1) {
+                _fps = _framesSinceLastPoll;
+                _framesSinceLastPoll = 0;
+                _fpsPollAccumulator = 0;
+            }
+
+            CurrentScene = CurrentScene?.Next;
+            if(CurrentScene == null) {
+                Finish();
+            }
+            AppName = $"~tbsg {_fps}fps {CurrentScene?.Name}";
         }
 
         void UpdateInput() {
