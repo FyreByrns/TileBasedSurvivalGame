@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Scenes\AbstractWorldGenVisualizer.cs" />
     <Compile Include="Engine.cs" />
     <Compile Include="InputHandler.cs" />
     <Compile Include="ITickable.cs" />
@@ -61,6 +62,7 @@
     <Compile Include="Networking\Server.cs" />
     <Compile Include="Rendering\Camera.cs" />
     <Compile Include="Rendering\TileRenderingHandler.cs" />
+    <Compile Include="Scenes\Scene.cs" />
     <Compile Include="World\Barrier.cs" />
     <Compile Include="World\Chunk.cs" />
     <Compile Include="World\Entity\Entity.cs" />

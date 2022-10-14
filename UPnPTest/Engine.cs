@@ -1,44 +1,24 @@
 ﻿using PixelEngine;
 using TileBasedSurvivalGame.Networking;
+using TileBasedSurvivalGame.Scenes;
 
 //// = documentation
 // = per-step working comments
 
 namespace TileBasedSurvivalGame {
-    abstract class Scene { 
-        public abstract string Name { get; }
-        public abstract Scene Next { get; protected set; }
-        public abstract void Update(Engine instance, float elapsed);
-        public abstract void Tick(Engine instance);
-    }
-
     class Engine : Game {
-        public Client Client { get; set; }
-        public Server Server { get; set; }
+        public Scene CurrentScene { get; private set; }
 
         public float TickLength { get; set; } = 1f / 30f;
         private float _tickAccumulator = 0;
 
         public override void OnUpdate(float elapsed) {
-            // fixed tick rate
-            _tickAccumulator += elapsed;
-            while (_tickAccumulator > TickLength) {
-                Client.Tick(this);
-                Server?.Tick(this);
-
-                _tickAccumulator -= TickLength;
-            }
-
-            // render chunks
-            foreach(World.Chunk chunk in Client.World.Chunks.Values) {
-                if (chunk.Changed) {
-                    chunk.RegenerateGraphics(this);
-                }
-            }
-
-            Client.Camera.Render(this, Client.World, Client.CameraLocation);
+            UpdateInput();
+            Update(elapsed);
+            Tick(elapsed);
+            Render();
         }
-        
+
         void UpdateInput() {
             // input
             bool[] mouseButtons = new bool[(int)Mouse.Any];
@@ -52,13 +32,24 @@ namespace TileBasedSurvivalGame {
             InputHandler.UpdateMouse(MouseX, MouseY, (int)MouseScroll);
             InputHandler.Update(mouseButtons, keys);
         }
+        void Update(float elapsed) {
+            CurrentScene?.Update(this, elapsed);
+        }
+        void Tick(float elapsed) {
+            // fixed tick rate
+            _tickAccumulator += elapsed;
+            while (_tickAccumulator > TickLength) {
+                CurrentScene?.Tick(this);
+                _tickAccumulator -= TickLength;
+            }
+        }
+        void Render() {
+            CurrentScene?.Render(this);
+        }
 
         public Engine(Client client, Server server) {
             DUMB_PARALLEL_DRAW = true;
-
             Construct(400, 225, 2, 2);
-            Client = client;
-            Server = server;
 
             // temporary bindings here, todo: load bindings from file in InputHandler sctor
             InputHandler.BindInput("move_north", Key.Up);
