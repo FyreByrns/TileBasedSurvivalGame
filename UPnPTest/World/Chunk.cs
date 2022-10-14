@@ -36,9 +36,8 @@ namespace TileBasedSurvivalGame.World {
             Changed = true;
         }
 
-        public void RegenerateGraphics() {
+        public void RegenerateGraphics(Engine context) {
             int ts = Rendering.TileRenderingHandler.TileSize;
-            Context context = Engine.Instance;
 
             if (Graphics == null) {
                 Graphics = new Sprite(ts * Size, ts * Size);
