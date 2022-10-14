@@ -6,11 +6,16 @@ using TileBasedSurvivalGame.Scenes;
 // = per-step working comments
 
 namespace TileBasedSurvivalGame {
+
     class Engine : Game {
         public Scene CurrentScene { get; private set; }
 
         public float TickLength { get; set; } = 1f / 30f;
         private float _tickAccumulator = 0;
+
+        public override void OnCreate() {
+            
+        }
 
         public override void OnUpdate(float elapsed) {
             UpdateInput();
@@ -47,9 +52,16 @@ namespace TileBasedSurvivalGame {
             CurrentScene?.Render(this);
         }
 
-        public Engine(Client client, Server server) {
+        public Engine() {
+            // load config
+            Config.Load();
+            // save config, this will create a default config if none was found
+            Config.Save();
+
+            Logger.ShowLogs = Config.Log;
+
             DUMB_PARALLEL_DRAW = true;
-            Construct(400, 225, 2, 2);
+            Construct(Config.ScreenWidth, Config.ScreenHeight, Config.PixelSize, Config.PixelSize);
 
             // temporary bindings here, todo: load bindings from file in InputHandler sctor
             InputHandler.BindInput("move_north", Key.Up);
