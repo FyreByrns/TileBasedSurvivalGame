@@ -34,7 +34,7 @@ namespace TileBasedSurvivalGame {
             _fpsPollAccumulator += elapsed;
             if(_fpsPollAccumulator >= 0.5f) {
                 _fps = _framesSinceLastPoll*2;
-                _spf = _fpsPollAccumulator / _framesSinceLastPoll;
+                _spf = _fpsPollAccumulator / _framesSinceLastPoll / 2f;
                 _framesSinceLastPoll = 0;
                 _fpsPollAccumulator = 0;
             }
