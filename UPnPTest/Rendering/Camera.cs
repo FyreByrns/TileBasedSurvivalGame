@@ -18,7 +18,7 @@ namespace TileBasedSurvivalGame.Rendering {
             _changesSinceLastFrame = true;
         }
 
-        public void Render(Game context, TiledWorld world, Location location) {
+        public void Render(Engine context, TiledWorld world, Location location) {
             int ts = TileRenderingHandler.TileSize;
 
             if (location != _lastLocation || _changesSinceLastFrame) {
@@ -44,7 +44,7 @@ namespace TileBasedSurvivalGame.Rendering {
 
                         if (chunk.Graphics == null) {
                             // if there are no cached graphics, regenerate them
-                            chunk.RegenerateGraphics();
+                            chunk.RegenerateGraphics(context);
                         }
                         context.DrawSprite(new Point(-chunkOffsetX, -chunkOffsetY), chunk.Graphics);
                     }
