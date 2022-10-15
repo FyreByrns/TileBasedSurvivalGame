@@ -21,6 +21,7 @@ namespace TileBasedSurvivalGame {
         public override void OnCreate() {
             // default scene
             CurrentScene = new AbstractWorldGenVisualizer();
+            CurrentScene.Begin(this);
         }
 
         public override void OnUpdate(float elapsed) {
@@ -39,7 +40,10 @@ namespace TileBasedSurvivalGame {
                 _fpsPollAccumulator = 0;
             }
 
-            CurrentScene = CurrentScene?.Next;
+            if (CurrentScene?.Next != CurrentScene) {
+                CurrentScene = CurrentScene?.Next;
+                CurrentScene.Begin(this);
+            }
             if(CurrentScene == null) {
                 Finish();
             }
