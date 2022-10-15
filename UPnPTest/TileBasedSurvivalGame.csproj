@@ -64,6 +64,7 @@
     <Compile Include="Rendering\Camera.cs" />
     <Compile Include="Rendering\TileRenderingHandler.cs" />
     <Compile Include="Scenes\Scene.cs" />
+    <Compile Include="Vector2.cs" />
     <Compile Include="World\Abstract\AbstractWorld.cs" />
     <Compile Include="World\Abstract\Connection.cs" />
     <Compile Include="World\Abstract\WorldNode.cs" />
