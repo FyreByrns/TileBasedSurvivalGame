@@ -1,6 +1,8 @@
 ﻿//// = documentation
 // = per-step working comments
 
+using TileBasedSurvivalGame.World.Abstract;
+
 namespace TileBasedSurvivalGame.Scenes {
     class AbstractWorldGenVisualizer : Scene {
         public override string Name => "Abstract World Gen Visualizer";

@@ -64,6 +64,9 @@
     <Compile Include="Rendering\Camera.cs" />
     <Compile Include="Rendering\TileRenderingHandler.cs" />
     <Compile Include="Scenes\Scene.cs" />
+    <Compile Include="World\Abstract\AbstractWorld.cs" />
+    <Compile Include="World\Abstract\Connection.cs" />
+    <Compile Include="World\Abstract\WorldNode.cs" />
     <Compile Include="World\Barrier.cs" />
     <Compile Include="World\Chunk.cs" />
     <Compile Include="World\Entity\Entity.cs" />
@@ -87,8 +90,6 @@
       <Name>FSerialization</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="World\Abstract\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
