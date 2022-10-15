@@ -10,8 +10,11 @@ namespace TileBasedSurvivalGame.Scenes {
 
         public AbstractWorld AbstractWorld { get; set; }
 
-        Vector2 _cameraLocation = (0, 0);
+        float _lastElapsed;
+
+        Vector2 _cameraLocation;
         float _cameraZoom = 1;
+        float _cameraSpeed = 100;
         Vector2 ScreenToWorld(Vector2 screenLocation) {
             return (_cameraLocation + screenLocation) * _cameraZoom;
         }
@@ -19,7 +22,12 @@ namespace TileBasedSurvivalGame.Scenes {
             return (worldLocation - _cameraLocation) * _cameraZoom;
         }
 
+        public override void Begin(Engine instance) {
+            _cameraLocation = new Vector2(instance.ScreenWidth / 2, instance.ScreenHeight / 2) * -1;
+        }
+
         public override void Update(Engine instance, float elapsed) {
+            _lastElapsed = elapsed;
             Next = this;
         }
         public override void Tick(Engine instance) { }
@@ -39,12 +47,10 @@ namespace TileBasedSurvivalGame.Scenes {
         }
 
         private void InputHandler_Input(string input, int ticksHeld) {
-            if (input == "cam_up") _cameraLocation.y--;
-            if (input == "cam_down") _cameraLocation.y++;
-            if (input == "cam_left") _cameraLocation.x--;
-            if (input == "cam_right") _cameraLocation.x++;
-
-            //_cameraZoom -= 0.99f * InputHandler.MouseScroll;
+            if (input == "cam_up") _cameraLocation.y -= _cameraSpeed * _lastElapsed;
+            if (input == "cam_down") _cameraLocation.y += _cameraSpeed * _lastElapsed;
+            if (input == "cam_left") _cameraLocation.x -= _cameraSpeed * _lastElapsed;
+            if (input == "cam_right") _cameraLocation.x += _cameraSpeed * _lastElapsed;
         }
     }
 }
