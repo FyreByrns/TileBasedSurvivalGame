@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config.cs" />
+    <Compile Include="ImmediateModeGui.cs" />
     <Compile Include="Scenes\AbstractWorldGenVisualizer.cs" />
     <Compile Include="Engine.cs" />
     <Compile Include="InputHandler.cs" />
