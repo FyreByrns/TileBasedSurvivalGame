@@ -1,4 +1,5 @@
 ﻿using PixelEngine;
+using System.Linq;
 using TileBasedSurvivalGame.Networking;
 using TileBasedSurvivalGame.Scenes;
 
@@ -6,7 +7,6 @@ using TileBasedSurvivalGame.Scenes;
 // = per-step working comments
 
 namespace TileBasedSurvivalGame {
-
     class Engine : Game {
         public Scene CurrentScene { get; private set; }
 
@@ -29,12 +29,11 @@ namespace TileBasedSurvivalGame {
             Update(elapsed);
             Tick(elapsed);
             Render();
-
             // fps / spf tracking
             _framesSinceLastPoll++;
             _fpsPollAccumulator += elapsed;
-            if(_fpsPollAccumulator >= 0.5f) {
-                _fps = _framesSinceLastPoll*2;
+            if (_fpsPollAccumulator >= 0.5f) {
+                _fps = _framesSinceLastPoll * 2;
                 _spf = _fpsPollAccumulator / _framesSinceLastPoll / 2f;
                 _framesSinceLastPoll = 0;
                 _fpsPollAccumulator = 0;
@@ -44,7 +43,7 @@ namespace TileBasedSurvivalGame {
                 CurrentScene = CurrentScene?.Next;
                 CurrentScene.Begin(this);
             }
-            if(CurrentScene == null) {
+            if (CurrentScene == null) {
                 Finish();
             }
             AppName = $"~tbsg fps/spf {_fps:000}/{_spf:00.0000} {CurrentScene?.Name}";
