@@ -5,6 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace TileBasedSurvivalGame.World.Abstract {
+    enum WorldNodeType {
+        None,
+
+        PointOfInterest,
+        Path,
+    }
+
     class WorldNode {
         public Vector2 Position { get; set; }
 

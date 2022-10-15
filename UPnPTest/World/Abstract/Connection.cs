@@ -5,7 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace TileBasedSurvivalGame.World.Abstract {
+    enum ConnectionType {
+        Any,
+        Land,
+        Water,
+    }
+
     class Connection {
+        public ConnectionType ConnectionType { get; set; }
+
         public WorldNode A { get; set; }
         public WorldNode B { get; set; }
     }
