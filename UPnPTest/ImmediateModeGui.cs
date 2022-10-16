@@ -10,6 +10,17 @@ namespace TileBasedSurvivalGame {
         public static Pixel ContentColour { get; set; } = Pixel.Presets.White;
         public static Pixel BackgroundColour { get; set; } = Pixel.Presets.Navy;
 
+        public static Vector2 TextSize(string text, int margin = 2, int scale = 1) {
+            int textPixelSize = 8 * scale;
+            int newlinesInText = 1;
+            foreach (char c in text) {
+                if (c == '\n')
+                    newlinesInText++;
+            }
+
+            return ((text.Length * textPixelSize) + margin * 2, newlinesInText * (textPixelSize + (margin * 2)));
+        }
+
         public static bool Button(Engine context, int x, int y, string text, int width = 0, int height = 0, int margin = 2, int scale = 1) {
             int textPixelSize = 8 * scale;
 
@@ -43,7 +54,7 @@ namespace TileBasedSurvivalGame {
             return false;
         }
 
-        public static bool EnumDropdown<T>(Engine context, int x, int y, T currentSelection, out T result, ref bool hovered, int margin = 2, int scale = 1) {
+        public static bool EnumDropdown<T>(Engine context, int x, int y, ref T selection, ref bool hovered, int margin = 2, int scale = 1) {
             int textPixelSize = 8 * scale;
             int width = 0;
             int height = textPixelSize + margin * 2;
@@ -64,14 +75,13 @@ namespace TileBasedSurvivalGame {
                 for (int i = 0; i < names.Length; i++) {
                     if (
                     Button(context, x, y + (textPixelSize + margin * 2) * (i + 1), names[i], width, 0, margin, scale)) {
-                        result = possibilities[i];
+                        selection = possibilities[i];
                         return true;
                     }
                 }
             }
             // otherwise, just show the current selection
-            Button(context, x, y, names[Array.IndexOf(possibilities, currentSelection)], width, 0, margin, scale);
-            result = currentSelection;
+            Button(context, x, y, names[Array.IndexOf(possibilities, selection)], width, 0, margin, scale);
             return false;
         }
     }

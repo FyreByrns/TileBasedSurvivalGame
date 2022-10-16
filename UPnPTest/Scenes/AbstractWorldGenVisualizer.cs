@@ -1,7 +1,10 @@
 ﻿//// = documentation
 // = per-step working comments
 
+using PixelEngine;
+using System.Linq;
 using TileBasedSurvivalGame.World.Abstract;
+using gui = TileBasedSurvivalGame.ImmediateModeGui;
 
 namespace TileBasedSurvivalGame.Scenes {
     class AbstractWorldGenVisualizer : Scene {
@@ -9,14 +12,16 @@ namespace TileBasedSurvivalGame.Scenes {
         public override Scene Next { get; protected set; }
 
         public AbstractWorld AbstractWorld { get; set; }
+        WorldNode _selectedNode = null;
 
         float _lastElapsed;
 
         Vector2 _cameraLocation;
+        Vector2 _newCameraLocation;
         float _cameraZoom = 1;
-        float _cameraSpeed = 100;
+        float _cameraSpeed = 200;
         Vector2 ScreenToWorld(Vector2 screenLocation) {
-            return (_cameraLocation + screenLocation) * _cameraZoom;
+            return (screenLocation / _cameraZoom) + _cameraLocation;
         }
         Vector2 WorldToScreen(Vector2 worldLocation) {
             return (worldLocation - _cameraLocation) * _cameraZoom;
@@ -24,33 +29,132 @@ namespace TileBasedSurvivalGame.Scenes {
 
         public override void Begin(Engine instance) {
             _cameraLocation = new Vector2(instance.ScreenWidth / 2, instance.ScreenHeight / 2) * -1;
+            _newCameraLocation = _cameraLocation;
         }
 
         public override void Update(Engine instance, float elapsed) {
             _lastElapsed = elapsed;
             Next = this;
+
+            // handle zooming
+            if (InputHandler.MouseScroll != 0) {
+                Vector2 oldMouseWorldLoc = ScreenToWorld((instance.MouseX, instance.MouseY));
+
+                if (InputHandler.MouseScroll > 0) {
+                    _cameraZoom *= 1.01f;
+                }
+                if (InputHandler.MouseScroll < 0) {
+                    _cameraZoom *= 0.99f;
+                }
+
+                Vector2 newMouseWorldLoc = ScreenToWorld((instance.MouseX, instance.MouseY));
+                Vector2 difference = oldMouseWorldLoc - newMouseWorldLoc;
+
+                _newCameraLocation = _cameraLocation = _cameraLocation + difference;
+            }
+
+            // handle camera movement
+            _cameraLocation.x = instance.Lerp(_cameraLocation.x, _newCameraLocation.x, elapsed);
+            _cameraLocation.y = instance.Lerp(_cameraLocation.y, _newCameraLocation.y, elapsed);
         }
         public override void Tick(Engine instance) { }
+
+        bool _typeDropdownHovered = false;
         override public void Render(Engine instance) {
-            instance.Clear(PixelEngine.Pixel.Empty);
-            instance.Draw(WorldToScreen(AbstractWorld.Origin.Position), PixelEngine.Pixel.Random());
+            instance.Clear(Pixel.Empty);
+            // recursively draw nodes and connections
+            foreach (WorldNode node in AbstractWorld.Origin.GetAllChildren()) {
+                instance.DrawCircle(WorldToScreen(node.Position), 4, _selectedNode == node ? Pixel.Presets.Green : Pixel.Presets.Grey);
+                instance.DrawText(WorldToScreen(node.Position) + (4, 4), new string(node.Type.ToString().Take(2).ToArray()), Pixel.Presets.Grey);
+                if (node.PositionLocked) {
+                    instance.DrawCircle(WorldToScreen(node.Position), 2, Pixel.Presets.DarkGrey);
+                }
+
+                foreach (Connection connection in node.Connections) {
+                    if (connection.B == null) continue;
+
+                    instance.DrawLine(WorldToScreen(connection.A.Position), WorldToScreen(connection.B.Position), Pixel.Presets.Lime);
+                }
+            }
+
+            // if there's a node selected, allow editing
+            if (_selectedNode != null) {
+                // current position
+                string positionString = $"{_selectedNode.Position.x:000.00},{_selectedNode.Position.y:000.00}";
+                instance.DrawText(new Vector2(0, instance.ScreenHeight - gui.TextSize(positionString).y), positionString, Pixel.Presets.White);
+
+                // distance
+                instance.DrawLine(WorldToScreen(_selectedNode.Position), new Point(instance.MouseX, instance.MouseY), Pixel.Presets.DarkGrey);
+                float distance = (_selectedNode.Position - ScreenToWorld((instance.MouseX, instance.MouseY))).Length;
+                instance.DrawText(new Point(instance.MouseX, instance.MouseY), $"{distance:000.00}", Pixel.Presets.DarkGrey);
+
+                gui.EnumDropdown(instance, 0, 0, ref _selectedNode.Type, ref _typeDropdownHovered);
+                if (gui.Button(instance, instance.ScreenWidth - (int)gui.TextSize("X").x, 0, "X")) { _selectedNode = null; }
+
+                // lock / unlock position
+                if (gui.Button(instance, instance.ScreenWidth - (int)gui.TextSize("L").x - (int)gui.TextSize("X").x, 0, "L")) { _selectedNode.PositionLocked = true; }
+                if (gui.Button(instance, instance.ScreenWidth - (int)gui.TextSize("U").x - (int)gui.TextSize("L").x - (int)gui.TextSize("X").x, 0, "U")) { _selectedNode.PositionLocked = false; }
+            }
+
+            instance.Draw(WorldToScreen(_cameraLocation), Pixel.Presets.Red);
+            instance.Draw(WorldToScreen(_newCameraLocation), Pixel.Presets.Pink);
         }
 
         public AbstractWorldGenVisualizer() {
             AbstractWorld = new AbstractWorld();
+            AbstractWorld.Origin.PositionLocked = true;
 
             InputHandler.Input += InputHandler_Input;
-            InputHandler.BindInput("cam_up", PixelEngine.Key.W);
-            InputHandler.BindInput("cam_down", PixelEngine.Key.S);
-            InputHandler.BindInput("cam_left", PixelEngine.Key.A);
-            InputHandler.BindInput("cam_right", PixelEngine.Key.D);
+            InputHandler.BindInput("cam_up", Key.W);
+            InputHandler.BindInput("cam_down", Key.S);
+            InputHandler.BindInput("cam_left", Key.A);
+            InputHandler.BindInput("cam_right", Key.D);
+
+            InputHandler.BindInput("chain_add", Key.Shift);
+            InputHandler.BindInput("mouse_left", Mouse.Left);
+            InputHandler.BindInput("mouse_right", Mouse.Right);
         }
 
         private void InputHandler_Input(string input, int ticksHeld) {
-            if (input == "cam_up") _cameraLocation.y -= _cameraSpeed * _lastElapsed;
-            if (input == "cam_down") _cameraLocation.y += _cameraSpeed * _lastElapsed;
-            if (input == "cam_left") _cameraLocation.x -= _cameraSpeed * _lastElapsed;
-            if (input == "cam_right") _cameraLocation.x += _cameraSpeed * _lastElapsed;
+            if (input == "cam_up") _newCameraLocation.y -= _cameraSpeed * _lastElapsed;
+            if (input == "cam_down") _newCameraLocation.y += _cameraSpeed * _lastElapsed;
+            if (input == "cam_left") _newCameraLocation.x -= _cameraSpeed * _lastElapsed;
+            if (input == "cam_right") _newCameraLocation.x += _cameraSpeed * _lastElapsed;
+
+            if (input == "mouse_left") {
+                foreach (WorldNode node in AbstractWorld.Origin.GetAllChildren()) {
+                    if ((WorldToScreen(node.Position) - (InputHandler.MouseX, InputHandler.MouseY)).Length < 4) {
+                        _selectedNode = node;
+                        break;
+                    }
+                }
+
+                if (ticksHeld > 1) {
+                    if (!_selectedNode?.PositionLocked ?? false) {
+                        if ((WorldToScreen(_selectedNode.Position) - (InputHandler.MouseX, InputHandler.MouseY)).Length < 32) {
+                            _selectedNode.Position = ScreenToWorld((InputHandler.MouseX, InputHandler.MouseY));
+                        }
+                    }
+                }
+            }
+            if (input == "mouse_right") {
+                if (ticksHeld == 1) {
+                    if (_selectedNode != null) {
+                        WorldNode newNode = new WorldNode() {
+                            Position = ScreenToWorld((InputHandler.MouseX, InputHandler.MouseY))
+                        };
+
+                        _selectedNode.Connections.Add(new Connection(_selectedNode, newNode));
+                        newNode.ConnectionToParent = new Connection(_selectedNode, newNode);
+
+                        if (InputHandler.InputHeld("chain_add")) {
+                            newNode.Type = _selectedNode.Type;
+                            _selectedNode = newNode;
+                            _newCameraLocation = newNode.Position - (Config.ScreenWidth / 2f / _cameraZoom, Config.ScreenHeight / 2f / _cameraZoom);
+                        }
+                    }
+                }
+            }
         }
     }
 }

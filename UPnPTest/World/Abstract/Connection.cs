@@ -16,5 +16,10 @@ namespace TileBasedSurvivalGame.World.Abstract {
 
         public WorldNode A { get; set; }
         public WorldNode B { get; set; }
+
+        public Connection(WorldNode a, WorldNode b) {
+            A = a;
+            B = b;
+        }
     }
 }

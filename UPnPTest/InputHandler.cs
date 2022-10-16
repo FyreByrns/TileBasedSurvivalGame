@@ -48,6 +48,22 @@ namespace TileBasedSurvivalGame {
             }
         }
 
+        public static bool InputHeld(string input) {
+            if (Binds.ContainsKey(input)) {
+                foreach(Key key in Binds[input].KeyBinds) {
+                    if (Keys[(int)key] > 0) {
+                        return true;
+                    }
+                }
+                foreach (Mouse mouse in Binds[input].MouseBinds) {
+                    if (MouseButtons[(int)mouse] > 0) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         public static void BindInput(string name, Mouse button) {
             name = name.ToLower(); // don't worry about accidental capitals
 
