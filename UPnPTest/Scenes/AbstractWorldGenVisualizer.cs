@@ -27,6 +27,13 @@ namespace TileBasedSurvivalGame.Scenes {
             return (worldLocation - _cameraLocation) * _cameraZoom;
         }
 
+        void CenterCameraOn(WorldNode node, bool snap = false) {
+            _newCameraLocation = node.Position - (Config.ScreenWidth / 2f / _cameraZoom, Config.ScreenHeight / 2f / _cameraZoom);
+            if (snap) {
+                _cameraLocation = _newCameraLocation;
+            }
+        }
+
         public override void Begin(Engine instance) {
             _cameraLocation = new Vector2(instance.ScreenWidth / 2, instance.ScreenHeight / 2) * -1;
             _newCameraLocation = _cameraLocation;
@@ -110,7 +117,10 @@ namespace TileBasedSurvivalGame.Scenes {
             InputHandler.BindInput("cam_left", Key.A);
             InputHandler.BindInput("cam_right", Key.D);
 
+            InputHandler.BindInput("delete_node", Key.Delete);
             InputHandler.BindInput("chain_add", Key.Shift);
+            InputHandler.BindInput("reparent_add", Key.Control);
+            InputHandler.BindInput("retransform", Key.Tab);
             InputHandler.BindInput("mouse_left", Mouse.Left);
             InputHandler.BindInput("mouse_right", Mouse.Right);
         }
@@ -132,7 +142,14 @@ namespace TileBasedSurvivalGame.Scenes {
                 if (ticksHeld > 1) {
                     if (!_selectedNode?.PositionLocked ?? false) {
                         if ((WorldToScreen(_selectedNode.Position) - (InputHandler.MouseX, InputHandler.MouseY)).Length < 32) {
+                            Vector2 oldPosition = _selectedNode.Position;
                             _selectedNode.Position = ScreenToWorld((InputHandler.MouseX, InputHandler.MouseY));
+
+                            if (InputHandler.InputHeld("retransform")) {
+                                foreach (Connection connection in _selectedNode.GetAllChildConections()) {
+                                    connection.B.Position -= (oldPosition - _selectedNode.Position);
+                                }
+                            }
                         }
                     }
                 }
@@ -144,13 +161,40 @@ namespace TileBasedSurvivalGame.Scenes {
                             Position = ScreenToWorld((InputHandler.MouseX, InputHandler.MouseY))
                         };
 
-                        _selectedNode.Connections.Add(new Connection(_selectedNode, newNode));
-                        newNode.ConnectionToParent = new Connection(_selectedNode, newNode);
+                        _selectedNode.Connect(newNode, true);
 
+                        if (InputHandler.InputHeld("reparent_add")) {
+                            newNode.Connections.AddRange(_selectedNode.Connections.Where(x => x.B != newNode));
+                            foreach (Connection connection in newNode.Connections) {
+                                if (connection.B != newNode) {
+                                    _selectedNode.Connections.Remove(connection);
+                                    connection.A = newNode;
+                                    connection.B.ConnectionToParent.A = newNode;
+                                    connection.B.ConnectionToParent.B = connection.B;
+                                }
+                            }
+                            if (InputHandler.InputHeld("retransform")) {
+                                foreach (Connection connection in newNode.GetAllChildConections()) {
+                                    connection.B.Position += (newNode.Position - _selectedNode.Position);
+                                }
+                            }
+                        }
                         if (InputHandler.InputHeld("chain_add")) {
                             newNode.Type = _selectedNode.Type;
                             _selectedNode = newNode;
-                            _newCameraLocation = newNode.Position - (Config.ScreenWidth / 2f / _cameraZoom, Config.ScreenHeight / 2f / _cameraZoom);
+                            CenterCameraOn(newNode);
+                        }
+                    }
+                }
+            }
+            if (input == "delete_node") {
+                if (ticksHeld == 1) {
+                    if (_selectedNode != null) {
+                        WorldNode parent = _selectedNode.ConnectionToParent?.A;
+                        if (parent != null) {
+                            parent.Disconnect(_selectedNode);
+                            _selectedNode = parent;
+                            CenterCameraOn(parent);
                         }
                     }
                 }
