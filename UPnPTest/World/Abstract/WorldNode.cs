@@ -16,6 +16,7 @@ namespace TileBasedSurvivalGame.World.Abstract {
         public Vector2 Position { get; set; }
         public bool PositionLocked { get; set; }
         public WorldNodeType Type;
+        public float EffectRadius;
 
         public Connection ConnectionToParent { get; set; }
         public List<Connection> Connections { get; }

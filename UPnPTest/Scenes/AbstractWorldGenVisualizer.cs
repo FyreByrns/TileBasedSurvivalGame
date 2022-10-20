@@ -71,8 +71,9 @@ namespace TileBasedSurvivalGame.Scenes {
             instance.Clear(Pixel.Empty);
             // recursively draw nodes and connections
             foreach (WorldNode node in AbstractWorld.Origin.GetAllChildren()) {
-                instance.DrawCircle(WorldToScreen(node.Position), 4, _selectedNode == node ? Pixel.Presets.Green : Pixel.Presets.Grey);
+                instance.DrawCircle(WorldToScreen(node.Position), 1, _selectedNode == node ? Pixel.Presets.Green : Pixel.Presets.Grey);
                 instance.DrawText(WorldToScreen(node.Position) + (4, 4), new string(node.Type.ToString().Take(2).ToArray()), Pixel.Presets.Grey);
+                instance.DrawCircle(WorldToScreen(node.Position), (int)(node.EffectRadius * _cameraZoom), Pixel.Presets.Lime);
                 if (node.PositionLocked) {
                     instance.DrawCircle(WorldToScreen(node.Position), 2, Pixel.Presets.DarkGrey);
                 }
@@ -94,6 +95,10 @@ namespace TileBasedSurvivalGame.Scenes {
                 instance.DrawLine(WorldToScreen(_selectedNode.Position), new Point(instance.MouseX, instance.MouseY), Pixel.Presets.DarkGrey);
                 float distance = (_selectedNode.Position - ScreenToWorld((instance.MouseX, instance.MouseY))).Length;
                 instance.DrawText(new Point(instance.MouseX, instance.MouseY), $"{distance:000.00}", Pixel.Presets.DarkGrey);
+
+                // radius
+                gui.Slider(instance, 180, 0, 100, 10, 0, 100, ref _selectedNode.EffectRadius);
+                instance.DrawText(WorldToScreen(_selectedNode.Position + (_selectedNode.EffectRadius, 0)), $"{_selectedNode.EffectRadius:000.00}", Pixel.Presets.Lime);
 
                 gui.EnumDropdown(instance, 0, 0, ref _selectedNode.Type, ref _typeDropdownHovered);
                 if (gui.Button(instance, instance.ScreenWidth - (int)gui.TextSize("X").x, 0, "X")) { _selectedNode = null; }
@@ -121,6 +126,7 @@ namespace TileBasedSurvivalGame.Scenes {
             InputHandler.BindInput("chain_add", Key.Shift);
             InputHandler.BindInput("reparent_add", Key.Control);
             InputHandler.BindInput("retransform", Key.Tab);
+
             InputHandler.BindInput("mouse_left", Mouse.Left);
             InputHandler.BindInput("mouse_right", Mouse.Right);
         }
