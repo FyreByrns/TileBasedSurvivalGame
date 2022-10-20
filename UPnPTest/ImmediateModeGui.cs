@@ -84,5 +84,29 @@ namespace TileBasedSurvivalGame {
             Button(context, x, y, names[Array.IndexOf(possibilities, selection)], width, 0, margin, scale);
             return false;
         }
+
+        public static void Slider(Engine context, int x, int y, int width, int height, float minValue, float maxValue, ref float value, int handleSize = 3, int margin = 2) {
+            Vector2 topLeft = (x, y);
+            Vector2 bottomRight = (x + width, y + height);
+
+            Vector2 sliderLineStart = (x + margin, y + height / 2);
+            Vector2 sliderLineEnd = (bottomRight.x - margin, y + height / 2);
+
+            context.FillRect(topLeft, bottomRight, BackgroundColour);
+            context.DrawRect(topLeft, bottomRight, BorderColour);
+            context.DrawLine(sliderLineStart, sliderLineEnd, BorderColour);
+
+            float percentageAlong = (value - minValue) / (maxValue - minValue);
+            float loc = context.Lerp(sliderLineStart.x, sliderLineEnd.x, percentageAlong);
+            Vector2 handleLoc = (loc, sliderLineStart.y);
+
+            if (context.GetMouse(Mouse.Left).Down &&
+                context.MouseX > x && context.MouseY > y && context.MouseX < bottomRight.x && context.MouseY < bottomRight.y) {
+                handleLoc.x = context.MouseX;
+                value = (maxValue - minValue) * (handleLoc.x - sliderLineStart.x) / (sliderLineEnd.x - sliderLineStart.x); // range mapping my behated
+            }
+
+            context.FillCircle(handleLoc, handleSize, ContentColour);
+        }
     }
 }
