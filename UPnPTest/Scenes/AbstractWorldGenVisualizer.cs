@@ -82,6 +82,17 @@ namespace TileBasedSurvivalGame.Scenes {
                     if (connection.B == null) continue;
 
                     instance.DrawLine(WorldToScreen(connection.A.Position), WorldToScreen(connection.B.Position), Pixel.Presets.Lime);
+                    Vector2 vec = connection.A.Position - connection.B.Position;
+                    Vector2 startNormA = vec.Normal.Normalized() * connection.A.EffectRadius;// * _cameraZoom;
+                    Vector2 startNormB = startNormA * -1;
+                    Vector2 endNormA = vec.Normal.Normalized() * connection.B.EffectRadius;// * _cameraZoom;
+                    Vector2 endNormB = endNormA * -1;
+                    instance.DrawLine(WorldToScreen(connection.A.Position), WorldToScreen(connection.A.Position + startNormA), Pixel.Presets.Apricot);
+                    instance.DrawLine(WorldToScreen(connection.A.Position), WorldToScreen(connection.A.Position + startNormB), Pixel.Presets.Apricot);
+                    instance.DrawLine(WorldToScreen(connection.B.Position), WorldToScreen(connection.B.Position + endNormA), Pixel.Presets.Apricot);
+                    instance.DrawLine(WorldToScreen(connection.B.Position), WorldToScreen(connection.B.Position + endNormB), Pixel.Presets.Apricot);
+                    instance.DrawLine(WorldToScreen(connection.A.Position + startNormA), WorldToScreen(connection.B.Position + endNormA), Pixel.Presets.Orange);
+                    instance.DrawLine(WorldToScreen(connection.A.Position + startNormB), WorldToScreen(connection.B.Position + endNormB), Pixel.Presets.Orange);
                 }
             }
 
