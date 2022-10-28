@@ -70,7 +70,7 @@ namespace TileBasedSurvivalGame.Scenes {
         override public void Render(Engine instance) {
             instance.Clear(Pixel.Empty);
             // recursively draw nodes and connections
-            foreach (WorldNode node in AbstractWorld.Origin.GetAllChildren()) {
+            foreach (WorldNode node in AbstractWorld.Nodes.GetPositionedWithinRect(ScreenToWorld((0, 0)), ScreenToWorld((instance.ScreenWidth, instance.ScreenHeight)))) {
                 instance.DrawCircle(WorldToScreen(node.Position), 1, _selectedNode == node ? Pixel.Presets.Green : Pixel.Presets.Grey);
                 instance.DrawText(WorldToScreen(node.Position) + (4, 4), new string(node.Type.ToString().Take(2).ToArray()), Pixel.Presets.Grey);
                 instance.DrawCircle(WorldToScreen(node.Position), (int)(node.EffectRadius * _cameraZoom), Pixel.Presets.Lime);

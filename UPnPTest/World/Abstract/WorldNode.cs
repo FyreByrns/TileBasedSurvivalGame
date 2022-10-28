@@ -18,57 +18,22 @@ namespace TileBasedSurvivalGame.World.Abstract {
         public WorldNodeType Type;
         public float EffectRadius;
 
-        public Connection ConnectionToParent { get; set; }
-        public List<Connection> Connections { get; }
-            = new List<Connection>();
+        public HashSet<WorldNode> ConnectedNodes { get; private set; }
 
-        public bool HasChild(WorldNode node, out Connection connection) {
-            IEnumerable<Connection> query = Connections.Where(x => x.B == node);
+        public void Connect(WorldNode other, bool connectFromOther = true) {
+            if(ConnectedNodes == null) {
+                ConnectedNodes = new HashSet<WorldNode>();
+            }
 
-            if (query.Count() > 0) {
-                connection = query.First();
-                return true;
-            }
-            connection = null;
-            return false;
-        }
-        public bool IsParentOfThisNode(WorldNode node) {
-            return ConnectionToParent.A == node;
-        }
-
-        public void Connect(WorldNode to, bool parent = false) {
-            if (parent) {
-                Connection connection = new Connection(this, to);
-                Connections.Add(connection);
-                to.ConnectionToParent = connection;
-            }
-            else {
-                to.Connect(this, true);
+            ConnectedNodes.Add(other);
+            if (connectFromOther) {
+                other.Connect(this, false);
             }
         }
-        public void Disconnect(WorldNode from) {
-            foreach (Connection childConnection in from.Connections) {
-                childConnection.A = this;
-                childConnection.B.ConnectionToParent.A = this;
-                Connections.Add(childConnection);
-            }
-            Connections.RemoveAll(x => x.B == from);
-        }
-
-        public IEnumerable<WorldNode> GetAllChildren() {
-            yield return this;
-            foreach (Connection connection in Connections) {
-                foreach (WorldNode node in connection?.B?.GetAllChildren()) {
-                    yield return node;
-                }
-            }
-        }
-        public IEnumerable<Connection> GetAllChildConections() {
-            foreach (Connection connection in Connections) {
-                yield return connection;
-                foreach (Connection cc in connection.B?.GetAllChildConections()) {
-                    yield return cc;
-                }
+        public void Disconnect(WorldNode other) {
+            if (ConnectedNodes.Contains(other)) {
+                ConnectedNodes.Remove(other);
+                other.Disconnect(this);
             }
         }
     }

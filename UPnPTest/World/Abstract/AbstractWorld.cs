@@ -6,10 +6,7 @@ using System.Threading.Tasks;
 
 namespace TileBasedSurvivalGame.World.Abstract {
     class AbstractWorld {
-        public WorldNode Origin { get; set; }
-
-        public AbstractWorld() {
-            Origin = new WorldNode();
-        }
+        public QuadTree Nodes { get; }
+        = new QuadTree(new AABB((0, 0), (1, 1)));
     }
 }

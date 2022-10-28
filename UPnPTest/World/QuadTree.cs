@@ -146,6 +146,39 @@ namespace TileBasedSurvivalGame.World {
             return false;
         }
 
+        public IEnumerable<Positioned> GetPositionedWithinRect(Vector2 topLeft, Vector2 bottomRight) {
+            AABB rect = new AABB(topLeft, bottomRight);
+
+            if (rect.Intersects(Bounds)) {
+                if (Leaf) {
+                    foreach (Positioned item in Contents) {
+                        if (rect.PointWithin(item.Position)) {
+                            yield return item;
+                        }
+                    }
+                }
+                else {
+                    foreach (QuadTree child in Children) {
+                        foreach (Positioned item in child.GetPositionedWithinRect(topLeft, bottomRight)) {
+                            yield return item;
+                        }
+                    }
+                }
+            }
+        }
+        public IEnumerable<Positioned<T>> GetPositionedWithinRect<T>(Vector2 topLeft, Vector2 bottomRight) {
+            foreach(Positioned item in GetPositionedWithinRect(topLeft, bottomRight)) {
+                if (item.Is<T>()) {
+                    yield return item.As<T>();
+                }
+            }
+        }
+        public IEnumerable<T> GetWithinRect<T>(Vector2 topLeft, Vector2 bottomRight) {
+            foreach(Positioned<T> item in GetPositionedWithinRect<T>(topLeft, bottomRight)) {
+                yield return item.GetValue();
+            }
+        }
+
         public QuadTree(AABB bounds) {
             Bounds = bounds;
             Bounds.Resize += BoundsResized;

@@ -68,7 +68,6 @@
     <Compile Include="Vector2.cs" />
     <Compile Include="World\AABB.cs" />
     <Compile Include="World\Abstract\AbstractWorld.cs" />
-    <Compile Include="World\Abstract\Connection.cs" />
     <Compile Include="World\Abstract\WorldNode.cs" />
     <Compile Include="World\Barrier.cs" />
     <Compile Include="World\Chunk.cs" />
