@@ -3,11 +3,20 @@
         public Vector2 Position { get; set; }
         public object Value { get; set; }
 
+        public bool Is<T>() {
+            return typeof(T) == Value.GetType();
+        }
         public Positioned<T> As<T>() {
-            if(Value.GetType() == typeof(T)) {
+            if(Is<T>()) {
                 return (Positioned<T>)this;
             }
             return null;
+        }
+        public T ValueAs<T>() {
+            if (Is<T>()){
+                return As<T>().GetValue();
+            }
+            return default(T);
         }
     }
 
