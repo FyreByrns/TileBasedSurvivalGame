@@ -3,6 +3,7 @@
 
 using PixelEngine;
 using System.Linq;
+using TileBasedSurvivalGame.World;
 using TileBasedSurvivalGame.World.Abstract;
 using gui = TileBasedSurvivalGame.ImmediateModeGui;
 
@@ -70,7 +71,7 @@ namespace TileBasedSurvivalGame.Scenes {
         override public void Render(Engine instance) {
             instance.Clear(Pixel.Empty);
             // recursively draw nodes and connections
-            foreach (WorldNode node in AbstractWorld.Nodes.GetPositionedWithinRect(ScreenToWorld((0, 0)), ScreenToWorld((instance.ScreenWidth, instance.ScreenHeight)))) {
+            foreach (WorldNode node in AbstractWorld.Nodes.GetWithinRect(ScreenToWorld((0, 0)), ScreenToWorld((instance.ScreenWidth, instance.ScreenHeight)))) {
                 instance.DrawCircle(WorldToScreen(node.Position), 1, _selectedNode == node ? Pixel.Presets.Green : Pixel.Presets.Grey);
                 instance.DrawText(WorldToScreen(node.Position) + (4, 4), new string(node.Type.ToString().Take(2).ToArray()), Pixel.Presets.Grey);
                 instance.DrawCircle(WorldToScreen(node.Position), (int)(node.EffectRadius * _cameraZoom), Pixel.Presets.Lime);
@@ -78,21 +79,21 @@ namespace TileBasedSurvivalGame.Scenes {
                     instance.DrawCircle(WorldToScreen(node.Position), 2, Pixel.Presets.DarkGrey);
                 }
 
-                foreach (Connection connection in node.Connections) {
-                    if (connection.B == null) continue;
-
-                    instance.DrawLine(WorldToScreen(connection.A.Position), WorldToScreen(connection.B.Position), Pixel.Presets.Lime);
-                    Vector2 vec = connection.A.Position - connection.B.Position;
-                    Vector2 startNormA = vec.Normal.Normalized() * connection.A.EffectRadius;// * _cameraZoom;
-                    Vector2 startNormB = startNormA * -1;
-                    Vector2 endNormA = vec.Normal.Normalized() * connection.B.EffectRadius;// * _cameraZoom;
-                    Vector2 endNormB = endNormA * -1;
-                    instance.DrawLine(WorldToScreen(connection.A.Position), WorldToScreen(connection.A.Position + startNormA), Pixel.Presets.Apricot);
-                    instance.DrawLine(WorldToScreen(connection.A.Position), WorldToScreen(connection.A.Position + startNormB), Pixel.Presets.Apricot);
-                    instance.DrawLine(WorldToScreen(connection.B.Position), WorldToScreen(connection.B.Position + endNormA), Pixel.Presets.Apricot);
-                    instance.DrawLine(WorldToScreen(connection.B.Position), WorldToScreen(connection.B.Position + endNormB), Pixel.Presets.Apricot);
-                    instance.DrawLine(WorldToScreen(connection.A.Position + startNormA), WorldToScreen(connection.B.Position + endNormA), Pixel.Presets.Orange);
-                    instance.DrawLine(WorldToScreen(connection.A.Position + startNormB), WorldToScreen(connection.B.Position + endNormB), Pixel.Presets.Orange);
+                if (node.ConnectedNodes != null) {
+                    foreach (WorldNode connection in node.ConnectedNodes) {
+                        instance.DrawLine(WorldToScreen(node.Position), WorldToScreen(connection.Position), Pixel.Presets.Lime);
+                        Vector2 vec = node.Position - connection.Position;
+                        Vector2 startNormA = vec.Normal.Normalized() * node.EffectRadius;// * _cameraZoom;
+                        Vector2 startNormB = startNormA * -1;
+                        Vector2 endNormA = vec.Normal.Normalized() * connection.EffectRadius;// * _cameraZoom;
+                        Vector2 endNormB = endNormA * -1;
+                        instance.DrawLine(WorldToScreen(node.Position), WorldToScreen(node.Position + startNormA), Pixel.Presets.Apricot);
+                        instance.DrawLine(WorldToScreen(node.Position), WorldToScreen(node.Position + startNormB), Pixel.Presets.Apricot);
+                        instance.DrawLine(WorldToScreen(connection.Position), WorldToScreen(connection.Position + endNormA), Pixel.Presets.Apricot);
+                        instance.DrawLine(WorldToScreen(connection.Position), WorldToScreen(connection.Position + endNormB), Pixel.Presets.Apricot);
+                        instance.DrawLine(WorldToScreen(node.Position + startNormA), WorldToScreen(connection.Position + endNormA), Pixel.Presets.Orange);
+                        instance.DrawLine(WorldToScreen(node.Position + startNormB), WorldToScreen(connection.Position + endNormB), Pixel.Presets.Orange);
+                    }
                 }
             }
 
@@ -121,11 +122,16 @@ namespace TileBasedSurvivalGame.Scenes {
 
             instance.Draw(WorldToScreen(_cameraLocation), Pixel.Presets.Red);
             instance.Draw(WorldToScreen(_newCameraLocation), Pixel.Presets.Pink);
+
+            foreach (var qt in AbstractWorld.Nodes.AllChildren()) {
+                if (qt.Bounds != null) {
+                    instance.DrawRect(WorldToScreen(qt.Bounds.TopLeft), WorldToScreen(qt.Bounds.BottomRight), Pixel.Random());
+                }
+            }
         }
 
         public AbstractWorldGenVisualizer() {
-            AbstractWorld = new AbstractWorld();
-            AbstractWorld.Origin.PositionLocked = true;
+            AbstractWorld = new AbstractWorld(100000);
 
             InputHandler.Input += InputHandler_Input;
             InputHandler.BindInput("cam_up", Key.W);
@@ -149,7 +155,7 @@ namespace TileBasedSurvivalGame.Scenes {
             if (input == "cam_right") _newCameraLocation.x += _cameraSpeed * _lastElapsed;
 
             if (input == "mouse_left") {
-                foreach (WorldNode node in AbstractWorld.Origin.GetAllChildren()) {
+                foreach (WorldNode node in AbstractWorld.Nodes.GetWithinRect(ScreenToWorld((0, 0)), ScreenToWorld((Config.ScreenWidth, Config.ScreenHeight)))) {
                     if ((WorldToScreen(node.Position) - (InputHandler.MouseX, InputHandler.MouseY)).Length < 4) {
                         _selectedNode = node;
                         break;
@@ -163,8 +169,8 @@ namespace TileBasedSurvivalGame.Scenes {
                             _selectedNode.Position = ScreenToWorld((InputHandler.MouseX, InputHandler.MouseY));
 
                             if (InputHandler.InputHeld("retransform")) {
-                                foreach (Connection connection in _selectedNode.GetAllChildConections()) {
-                                    connection.B.Position -= (oldPosition - _selectedNode.Position);
+                                foreach (WorldNode connection in _selectedNode.GetAllRelatives()) {
+                                    connection.Position -= (oldPosition - _selectedNode.Position);
                                 }
                             }
                         }
@@ -173,46 +179,24 @@ namespace TileBasedSurvivalGame.Scenes {
             }
             if (input == "mouse_right") {
                 if (ticksHeld == 1) {
+                    WorldNode newNode = new WorldNode() {
+                        Position = ScreenToWorld((InputHandler.MouseX, InputHandler.MouseY))
+                    };
+                    AbstractWorld.Nodes.Add(newNode);
+
                     if (_selectedNode != null) {
-                        WorldNode newNode = new WorldNode() {
-                            Position = ScreenToWorld((InputHandler.MouseX, InputHandler.MouseY))
-                        };
-
-                        _selectedNode.Connect(newNode, true);
-
-                        if (InputHandler.InputHeld("reparent_add")) {
-                            newNode.Connections.AddRange(_selectedNode.Connections.Where(x => x.B != newNode));
-                            foreach (Connection connection in newNode.Connections) {
-                                if (connection.B != newNode) {
-                                    _selectedNode.Connections.Remove(connection);
-                                    connection.A = newNode;
-                                    connection.B.ConnectionToParent.A = newNode;
-                                    connection.B.ConnectionToParent.B = connection.B;
-                                }
-                            }
-                            if (InputHandler.InputHeld("retransform")) {
-                                foreach (Connection connection in newNode.GetAllChildConections()) {
-                                    connection.B.Position += (newNode.Position - _selectedNode.Position);
-                                }
-                            }
-                        }
-                        if (InputHandler.InputHeld("chain_add")) {
-                            newNode.Type = _selectedNode.Type;
-                            _selectedNode = newNode;
-                            CenterCameraOn(newNode);
-                        }
+                        _selectedNode.Connect(newNode);
                     }
+
+                    System.Console.WriteLine($"new node at ({newNode.Position.x},{newNode.Position.y})");
                 }
             }
             if (input == "delete_node") {
                 if (ticksHeld == 1) {
                     if (_selectedNode != null) {
-                        WorldNode parent = _selectedNode.ConnectionToParent?.A;
-                        if (parent != null) {
-                            parent.Disconnect(_selectedNode);
-                            _selectedNode = parent;
-                            CenterCameraOn(parent);
-                        }
+                        _selectedNode.DisconnectFromAll();
+                        AbstractWorld.Nodes.Remove(_selectedNode);
+                        _selectedNode = null;
                     }
                 }
             }
