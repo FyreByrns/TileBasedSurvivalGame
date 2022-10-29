@@ -18,7 +18,6 @@ namespace TileBasedSurvivalGame.World.Abstract {
         }
     }
 
-
     class WorldNode {
         public Vector2 Position { get; set; }
         public bool PositionLocked { get; set; }
@@ -26,20 +25,6 @@ namespace TileBasedSurvivalGame.World.Abstract {
         public float EffectRadius;
 
         public HashSet<WorldNode> ConnectedNodes { get; private set; }
-
-        /// <summary>
-        /// Get all connected nodes and all their connected nodes.
-        /// </summary>
-        public IEnumerable<WorldNode> GetAllRelatives() {
-            if (ConnectedNodes != null) {
-                foreach (WorldNode node in ConnectedNodes) {
-                    yield return node;
-                    foreach (WorldNode nodeConnection in node.GetAllRelatives()) {
-                        yield return nodeConnection;
-                    }
-                }
-            }
-        }
 
         public void Connect(WorldNode other, bool connectFromOther = true) {
             if (ConnectedNodes == null) {

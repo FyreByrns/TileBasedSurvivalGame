@@ -69,11 +69,15 @@ namespace TileBasedSurvivalGame.Scenes {
 
         bool _typeDropdownHovered = false;
         override public void Render(Engine instance) {
+            Vector2 w_mousePos = ScreenToWorld((InputHandler.MouseX, InputHandler.MouseY));
+
             instance.Clear(Pixel.Empty);
             // recursively draw nodes and connections
             foreach (WorldNode node in AbstractWorld.Nodes.GetWithinRect(ScreenToWorld((0, 0)), ScreenToWorld((instance.ScreenWidth, instance.ScreenHeight)))) {
                 instance.DrawCircle(WorldToScreen(node.Position), 1, _selectedNode == node ? Pixel.Presets.Green : Pixel.Presets.Grey);
-                instance.DrawText(WorldToScreen(node.Position) + (4, 4), new string(node.Type.ToString().Take(2).ToArray()), Pixel.Presets.Grey);
+                if (node == _selectedNode) {
+                    instance.DrawText(WorldToScreen(node.Position) + (4, 4), node.Type.ToString(), Pixel.Presets.Grey);
+                }
                 instance.DrawCircle(WorldToScreen(node.Position), (int)(node.EffectRadius * _cameraZoom), Pixel.Presets.Lime);
                 if (node.PositionLocked) {
                     instance.DrawCircle(WorldToScreen(node.Position), 2, Pixel.Presets.DarkGrey);
@@ -104,8 +108,8 @@ namespace TileBasedSurvivalGame.Scenes {
                 instance.DrawText(new Vector2(0, instance.ScreenHeight - gui.TextSize(positionString).y), positionString, Pixel.Presets.White);
 
                 // distance
-                instance.DrawLine(WorldToScreen(_selectedNode.Position), new Point(instance.MouseX, instance.MouseY), Pixel.Presets.DarkGrey);
-                float distance = (_selectedNode.Position - ScreenToWorld((instance.MouseX, instance.MouseY))).Length;
+                instance.DrawCircle(WorldToScreen(_selectedNode.Position), (int)(_selectedNode.Position - w_mousePos).Length, Pixel.Presets.DarkGrey);
+                float distance = (_selectedNode.Position - w_mousePos).Length;
                 instance.DrawText(new Point(instance.MouseX, instance.MouseY), $"{distance:000.00}", Pixel.Presets.DarkGrey);
 
                 // radius
@@ -122,12 +126,6 @@ namespace TileBasedSurvivalGame.Scenes {
 
             instance.Draw(WorldToScreen(_cameraLocation), Pixel.Presets.Red);
             instance.Draw(WorldToScreen(_newCameraLocation), Pixel.Presets.Pink);
-
-            foreach (var qt in AbstractWorld.Nodes.AllChildren()) {
-                if (qt.Bounds != null) {
-                    instance.DrawRect(WorldToScreen(qt.Bounds.TopLeft), WorldToScreen(qt.Bounds.BottomRight), Pixel.Random());
-                }
-            }
         }
 
         public AbstractWorldGenVisualizer() {
@@ -140,38 +138,56 @@ namespace TileBasedSurvivalGame.Scenes {
             InputHandler.BindInput("cam_right", Key.D);
 
             InputHandler.BindInput("delete_node", Key.Delete);
-            InputHandler.BindInput("chain_add", Key.Shift);
-            InputHandler.BindInput("reparent_add", Key.Control);
-            InputHandler.BindInput("retransform", Key.Tab);
 
+            InputHandler.BindInput("chain_add", Key.Shift);
+            InputHandler.BindInput("connect", Key.Control);
             InputHandler.BindInput("mouse_left", Mouse.Left);
             InputHandler.BindInput("mouse_right", Mouse.Right);
         }
 
         private void InputHandler_Input(string input, int ticksHeld) {
+            Vector2 w_mousePos = ScreenToWorld((InputHandler.MouseX, InputHandler.MouseY));
+
             if (input == "cam_up") _newCameraLocation.y -= _cameraSpeed * _lastElapsed;
             if (input == "cam_down") _newCameraLocation.y += _cameraSpeed * _lastElapsed;
             if (input == "cam_left") _newCameraLocation.x -= _cameraSpeed * _lastElapsed;
             if (input == "cam_right") _newCameraLocation.x += _cameraSpeed * _lastElapsed;
 
             if (input == "mouse_left") {
+                WorldNode closestToMouse = null;
+                float lastDistance = float.MaxValue;
                 foreach (WorldNode node in AbstractWorld.Nodes.GetWithinRect(ScreenToWorld((0, 0)), ScreenToWorld((Config.ScreenWidth, Config.ScreenHeight)))) {
-                    if ((WorldToScreen(node.Position) - (InputHandler.MouseX, InputHandler.MouseY)).Length < 4) {
-                        _selectedNode = node;
-                        break;
+                    float distanceToMouse = (node.Position - w_mousePos).Length;
+                    if (distanceToMouse < lastDistance) {
+                        lastDistance = distanceToMouse;
+                        closestToMouse = node;
                     }
                 }
 
-                if (ticksHeld > 1) {
-                    if (!_selectedNode?.PositionLocked ?? false) {
-                        if ((WorldToScreen(_selectedNode.Position) - (InputHandler.MouseX, InputHandler.MouseY)).Length < 32) {
-                            Vector2 oldPosition = _selectedNode.Position;
-                            _selectedNode.Position = ScreenToWorld((InputHandler.MouseX, InputHandler.MouseY));
-
-                            if (InputHandler.InputHeld("retransform")) {
-                                foreach (WorldNode connection in _selectedNode.GetAllRelatives()) {
-                                    connection.Position -= (oldPosition - _selectedNode.Position);
+                if (InputHandler.InputHeld("connect")) {
+                    if (ticksHeld == 1) {
+                        if (_selectedNode != null && lastDistance < 4) {
+                            if (closestToMouse != _selectedNode) {
+                                if (_selectedNode.ConnectedNodes.Contains(closestToMouse)) {
+                                    _selectedNode.Disconnect(closestToMouse);
                                 }
+                                else {
+                                    _selectedNode.Connect(closestToMouse);
+                                }
+                            }
+                        }
+                    }
+                }
+                else {
+                    if ((WorldToScreen(closestToMouse.Position) - (InputHandler.MouseX, InputHandler.MouseY)).Length < 4) {
+                        _selectedNode = closestToMouse;
+                    }
+
+                    if (ticksHeld > 1) {
+                        if (!_selectedNode?.PositionLocked ?? false) {
+                            if ((WorldToScreen(_selectedNode.Position) - (InputHandler.MouseX, InputHandler.MouseY)).Length < 32) {
+                                Vector2 oldPosition = _selectedNode.Position;
+                                _selectedNode.Position = ScreenToWorld((InputHandler.MouseX, InputHandler.MouseY));
                             }
                         }
                     }
@@ -184,11 +200,15 @@ namespace TileBasedSurvivalGame.Scenes {
                     };
                     AbstractWorld.Nodes.Add(newNode);
 
-                    if (_selectedNode != null) {
-                        _selectedNode.Connect(newNode);
+                    if (InputHandler.InputHeld("chain_add")) {
+                        if (_selectedNode != null) {
+                            _selectedNode.Connect(newNode);
+                            newNode.Type = _selectedNode?.Type ?? default;
+                            newNode.EffectRadius = _selectedNode?.EffectRadius ?? default;
+                        }
+                        _selectedNode = newNode;
+                        CenterCameraOn(_selectedNode);
                     }
-
-                    System.Console.WriteLine($"new node at ({newNode.Position.x},{newNode.Position.y})");
                 }
             }
             if (input == "delete_node") {
