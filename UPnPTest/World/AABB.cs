@@ -46,11 +46,11 @@ namespace TileBasedSurvivalGame.World {
 
         public bool PointWithin(Vector2 point) {
             return point.x >= TopLeft.x && point.y >= TopLeft.y
-                && point.x <= BottomRight.x && point.y <= BottomRight.y;
+                && point.x < BottomRight.x && point.y < BottomRight.y;
         }
 
         public bool Intersects(AABB other) {
-            return other.TopLeft.x <= BottomRight.x && other.TopLeft.y <= BottomRight.y
+            return other.TopLeft.x < BottomRight.x && other.TopLeft.y < BottomRight.y
                 && other.BottomRight.x >= TopLeft.x && other.BottomRight.y >= TopLeft.y;
         }
 
