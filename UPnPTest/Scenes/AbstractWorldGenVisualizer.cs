@@ -179,6 +179,10 @@ namespace TileBasedSurvivalGame.Scenes {
                     }
                 }
                 else {
+                    if(closestToMouse == null) {
+                        _selectedNode = null;
+                    }
+                    else
                     if ((WorldToScreen(closestToMouse.Position) - (InputHandler.MouseX, InputHandler.MouseY)).Length < 4) {
                         _selectedNode = closestToMouse;
                     }
