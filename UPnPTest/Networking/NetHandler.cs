@@ -20,6 +20,7 @@ namespace TileBasedSurvivalGame.Networking {
         public static IPEndPoint ServerEP => new IPEndPoint(ServerIP, ServerPort);
 
         public static HashSet<IPEndPoint> ConnectedClients { get; private set; }
+        = new HashSet<IPEndPoint>();
 
         private static UdpClient server;
         private static UdpClient client;
@@ -57,6 +58,7 @@ namespace TileBasedSurvivalGame.Networking {
 
             IPEndPoint from = new IPEndPoint(IPAddress.Any, 0);
             byte[] data = self.EndReceive(result, ref from);
+            ConnectedClients.Add(from);
 
             NetMessage message = new NetMessage(from, data);
             message = NetMessage.MessageToSubtype(message);

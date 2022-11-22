@@ -11,5 +11,10 @@ namespace FSerialization {
             bytes.Append(me);
             return bytes.ToArray();
         }
+        public static byte[] FSData(this int me) {
+            List<byte> bytes = new List<byte>();
+            bytes.Append(me);
+            return bytes.ToArray();
+        }
     }
 }

@@ -28,12 +28,7 @@ namespace TileBasedSurvivalGame.Networking {
 
         protected virtual void ReadDataToFields() { }
 
-        /// <summary>
-        /// Construct a NetMessage to send
-        /// </summary>
-        protected NetMessage(string intent, byte[] data) {
-            Intent = intent;
-            Sent = DateTime.Now;
+        protected void SetupData(byte[] data) {
             BodyLength = data.Length;
 
             byte[] header = GetHeader();
@@ -42,6 +37,16 @@ namespace TileBasedSurvivalGame.Networking {
             RawData = new byte[HeaderLength + BodyLength];
             Array.Copy(header, RawData, HeaderLength);
             Array.Copy(data, 0, RawData, HeaderLength, BodyLength);
+        }
+
+        /// <summary>
+        /// Construct a NetMessage to send
+        /// </summary>
+        protected NetMessage(string intent, byte[] data) {
+            Intent = intent;
+            Sent = DateTime.Now;
+
+            SetupData(data);
         }
         /// <summary>
         /// Construct a NetMessage from network data
@@ -111,23 +116,70 @@ namespace TileBasedSurvivalGame.Networking {
         [ServerToClient]
         [Intent("ac")]
         class AllowConnection : NetMessage {
+            public int ClientID;
+
+            protected override void ReadDataToFields() {
+                base.ReadDataToFields();
+
+                int readIndex = 0;
+                ClientID = BodyData.Get<int>(ref readIndex);
+            }
+
             public AllowConnection() : base(GetIntentAttr<AllowConnection>(), Array.Empty<byte>()) { }
+            public AllowConnection(int id) : base(GetIntentAttr<AllowConnection>(), id.FSData()) { }
         }
 
         [EitherToEither]
         [Intent("msg")]
         class TextMessage : NetMessage {
             public string Text { get; private set; }
+            public bool FromServer { get; private set; }
+            public int OriginatingID { get; private set; }
 
             protected override void ReadDataToFields() {
                 base.ReadDataToFields();
 
                 int readIndex = 0;
                 Text = BodyData.Get<string>(ref readIndex);
+
+                // if there's more data, it's probably from the server
+                if (readIndex != BodyData.Length) {
+                    FromServer = BodyData.Get<bool>(ref readIndex);
+                    if (FromServer) {
+                        OriginatingID = BodyData.Get<int>(ref readIndex);
+                    }
+                }
             }
 
             public TextMessage() : base(GetIntentAttr<TextMessage>(), Array.Empty<byte>()) { }
             public TextMessage(string text) : base(GetIntentAttr<TextMessage>(), text.FSData()) { }
+            public TextMessage(string text, int originatingID) : this(text) {
+                List<byte> moreData = new List<byte>();
+                moreData.Append(text);
+                moreData.Append(true);
+                moreData.Append(originatingID);
+                SetupData(moreData.ToArray());
+            }
+        }
+
+        [ServerToClient]
+        [Intent("plist")]
+        class PlayerList : NetMessage {
+            public int[] IDs { get; private set; }
+
+            protected override void ReadDataToFields() {
+                base.ReadDataToFields();
+
+                int readIndex = 0;
+                IDs = BodyData.Get<int[]>(ref readIndex);
+            }
+
+            public PlayerList() : base(GetIntentAttr<PlayerList>(), Array.Empty<byte>()) { }
+            public PlayerList(params int[] ids) : this() {
+                List<byte> data = new List<byte>();
+                data.Append(ids);
+                SetupData(data.ToArray());
+            }
         }
     }
 }
