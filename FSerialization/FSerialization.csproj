@@ -43,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ByteArrayExtensions.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="File.cs" />
     <Compile Include="FileLocation.cs" />
     <Compile Include="FileManager.cs" />

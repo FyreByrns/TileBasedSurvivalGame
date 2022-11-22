@@ -38,7 +38,7 @@ namespace TileBasedSurvivalGame.Networking {
 
             byte[] header = GetHeader();
             HeaderLength = header.Length;
-            
+
             RawData = new byte[HeaderLength + BodyLength];
             Array.Copy(header, RawData, HeaderLength);
             Array.Copy(data, 0, RawData, HeaderLength, BodyLength);
@@ -55,12 +55,14 @@ namespace TileBasedSurvivalGame.Networking {
             Intent = data.Get<string>(ref readIndex);
             BodyLength = data.Get<int>(ref readIndex);
             HeaderLength = readIndex; // all the header data has been read now, so the read index will be the header length
+
+            BodyData = new byte[BodyLength];
             Array.Copy(RawData, HeaderLength, BodyData, 0, BodyLength);
         }
 
         //// reflection stuff to generate message type data etc
         static Dictionary<string, Type> IntentToType = new Dictionary<string, Type>();
-        
+
         public static NetMessage MessageToSubtype(NetMessage rawMessage) {
             NetMessage result = null;
             if (IntentToType.ContainsKey(rawMessage.Intent)) {
@@ -108,13 +110,13 @@ namespace TileBasedSurvivalGame.Networking {
 
         [ServerToClient]
         [Intent("ac")]
-        class AllowConnection : NetMessage { 
+        class AllowConnection : NetMessage {
             public AllowConnection() : base(GetIntentAttr<AllowConnection>(), Array.Empty<byte>()) { }
         }
 
         [EitherToEither]
         [Intent("msg")]
-        class Message : NetMessage {
+        class TextMessage : NetMessage {
             public string Text { get; private set; }
 
             protected override void ReadDataToFields() {
@@ -124,10 +126,8 @@ namespace TileBasedSurvivalGame.Networking {
                 Text = BodyData.Get<string>(ref readIndex);
             }
 
-            public Message() : base(GetIntentAttr<Message>(), Array.Empty<byte>()) { }
-            public Message(string text) : this() {
-
-            }
+            public TextMessage() : base(GetIntentAttr<TextMessage>(), Array.Empty<byte>()) { }
+            public TextMessage(string text) : base(GetIntentAttr<TextMessage>(), text.FSData()) { }
         }
     }
 }

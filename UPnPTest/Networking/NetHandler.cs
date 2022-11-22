@@ -72,6 +72,7 @@ namespace TileBasedSurvivalGame.Networking {
             byte[] data = self.EndReceive(result, ref from);
 
             NetMessage message = new NetMessage(from, data);
+            message = NetMessage.MessageToSubtype(message);
 
             OnClientMessage(message);
 
