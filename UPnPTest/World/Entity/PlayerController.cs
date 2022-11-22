@@ -3,7 +3,7 @@ using InputMap = System.Collections.Generic.Dictionary<string, System.Action>;
 
 namespace TileBasedSurvivalGame.World {
     class PlayerController : EntityController {
-        public override void Update(TiledWorld world) {
+        public override void Update(World world) {
             base.Update(world);
         }
 

@@ -30,7 +30,7 @@ namespace TileBasedSurvivalGame.World {
             // TopLeft is 1ACB
             // TopRight is A2DC
             // BottomLeft is BCE3
-            // BottomRight is CDE4
+            // BottomRight is CD4E
             // 1---A---2
             // |       |
             // B   C   D 

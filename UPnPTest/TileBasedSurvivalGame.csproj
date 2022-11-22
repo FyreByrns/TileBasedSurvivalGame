@@ -46,40 +46,39 @@
   <ItemGroup>
     <Compile Include="Config.cs" />
     <Compile Include="ImmediateModeGui.cs" />
+    <Compile Include="Networking\NetAttributes.cs" />
+    <Compile Include="Networking\NetMessage.cs" />
+    <Compile Include="Networking\Server.cs" />
     <Compile Include="Scenes\AbstractWorldGenVisualizer.cs" />
     <Compile Include="Engine.cs" />
     <Compile Include="InputHandler.cs" />
     <Compile Include="ITickable.cs" />
     <Compile Include="Logger.cs" />
-    <Compile Include="Networking\Client.cs" />
     <Compile Include="Helper.cs" />
-    <Compile Include="Networking\Intent.cs" />
-    <Compile Include="Networking\LobbyData.cs" />
-    <Compile Include="Networking\NetMessage.cs" />
     <Compile Include="Networking\NetHandler.cs" />
     <Compile Include="Networking\Player.cs" />
     <Compile Include="Networking\ReservedWords.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Networking\Server.cs" />
     <Compile Include="Rendering\Camera.cs" />
     <Compile Include="Rendering\TileRenderingHandler.cs" />
+    <Compile Include="Scenes\NetworkTest.cs" />
+    <Compile Include="Scenes\RealizedWorldTestScene.cs" />
     <Compile Include="Scenes\Scene.cs" />
     <Compile Include="Vector2.cs" />
     <Compile Include="World\AABB.cs" />
     <Compile Include="World\Abstract\AbstractWorld.cs" />
     <Compile Include="World\Abstract\WorldNode.cs" />
-    <Compile Include="World\Barrier.cs" />
-    <Compile Include="World\Chunk.cs" />
     <Compile Include="World\Entity\Entity.cs" />
     <Compile Include="World\Entity\EntityController.cs" />
     <Compile Include="World\Location.cs" />
     <Compile Include="World\Entity\PlayerController.cs" />
     <Compile Include="World\IPositioner.cs" />
     <Compile Include="World\QuadTree.cs" />
+    <Compile Include="World\Realized\RealizedWorld.cs" />
     <Compile Include="World\Tile.cs" />
-    <Compile Include="World\TiledWorld.cs" />
     <Compile Include="World\TileTypeHandler.cs" />
+    <Compile Include="World\World.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

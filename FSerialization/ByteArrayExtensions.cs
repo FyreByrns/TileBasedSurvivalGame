@@ -13,7 +13,7 @@ namespace FSerialization {
                 int len = me.Get<int>(ref index);
                 object array = Activator.CreateInstance(typeof(T), new object[] { len }); // create array
                 for (int i = 0; i < len; i++) { // read values into array
-                    MethodInfo reflectionGetT 
+                    MethodInfo reflectionGetT
                         = typeof(ByteArrayExtensions).GetMethod("Get").MakeGenericMethod(array.GetType().GetElementType());
                     object[] arguments = { me, index };
                     ((Array)array).SetValue(reflectionGetT.Invoke(null, arguments), i);
@@ -132,10 +132,13 @@ namespace FSerialization {
                 case BYTE: {
                         me.Append<byte>((byte)o);
                         break;
-                    } 
-                case
-                CHAR: {
+                    }
+                case CHAR: {
                         me.Append<char>((char)o);
+                        break;
+                    }
+                case INT: {
+                        me.Append<int>((int)o);
                         break;
                     }
             }

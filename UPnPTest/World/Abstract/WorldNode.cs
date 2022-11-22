@@ -8,8 +8,7 @@ namespace TileBasedSurvivalGame.World.Abstract {
     enum WorldNodeType {
         None,
 
-        PointOfInterest,
-        Path,
+        Coastline,
     }
 
     class WorldNodePositioner : IPositioner<WorldNode> {
@@ -29,6 +28,11 @@ namespace TileBasedSurvivalGame.World.Abstract {
         public void Connect(WorldNode other, bool connectFromOther = true) {
             if (ConnectedNodes == null) {
                 ConnectedNodes = new HashSet<WorldNode>();
+            }
+
+            // don't connect to self
+            if (other == this) {
+                return;
             }
 
             ConnectedNodes.Add(other);

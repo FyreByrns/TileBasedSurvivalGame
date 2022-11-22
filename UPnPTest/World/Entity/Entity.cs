@@ -1,10 +1,9 @@
-﻿using ChunkList = System.Collections.Generic.HashSet<TileBasedSurvivalGame.World.Chunk>;
+﻿using System.Collections.Generic;
 
 namespace TileBasedSurvivalGame.World {
     class Entity {
+        public Dictionary<string, bool> EntityFlags { get; set; } = new Dictionary<string, bool>();
         public Location WorldLocation { get; set; }
-        public ChunkList InhabitedChunks { get; }
-        = new ChunkList();
         public EntityController Controller { get; set; }
 
         public int Width { get; set; }
@@ -22,10 +21,6 @@ namespace TileBasedSurvivalGame.World {
                 && WorldLocation.Y + Height > other.WorldLocation.Y
                 && WorldLocation.X < other.WorldLocation.X + other.Width
                 && WorldLocation.Y < other.WorldLocation.Y + other.Height;
-        }
-
-        public override int GetHashCode() {
-            return WorldLocation.X.GetHashCode() ^ WorldLocation.Y.GetHashCode() ^ Width.GetHashCode() ^ Height.GetHashCode() ^ InhabitedChunks.GetHashCode();
         }
     }
 }

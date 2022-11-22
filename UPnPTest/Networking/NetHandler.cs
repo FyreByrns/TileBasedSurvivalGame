@@ -2,22 +2,25 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
-using FSerialization;
 
 namespace TileBasedSurvivalGame.Networking {
+
     //// static class to handle all the innards of networking
     static class NetHandler {
+        public delegate void NetMessageEventHandler(NetMessage message);
+
         public static event NetMessageEventHandler ServerMessage;
         public static event NetMessageEventHandler ClientMessage;
 
         public static IPAddress ServerIP { get; private set; }
         public static int ServerPort { get; private set; }
         public static IPEndPoint ServerEP => new IPEndPoint(ServerIP, ServerPort);
+
+        public static HashSet<IPEndPoint> ConnectedClients { get; private set; }
+        = new HashSet<IPEndPoint>();
 
         private static UdpClient server;
         private static UdpClient client;
@@ -31,15 +34,20 @@ namespace TileBasedSurvivalGame.Networking {
 
         public static void SendToClient(IPEndPoint target, NetMessage message) {
             Task.Run(() => {
-                Logger.Log($"to {target}: {message.MessageIntent}");
+                Logger.Log($"to {target}: {message.Intent}");
 
                 server.Send(message.RawData, message.RawData.Length, target);
             });
         }
+        public static void SendToAllClients(NetMessage message) {
+            foreach (IPEndPoint target in ConnectedClients) {
+                SendToClient(target, message);
+            }
+        }
 
         public static void SendToServer(NetMessage message) {
             Task.Run(() => {
-                Logger.Log($"to server: {message.MessageIntent}");
+                Logger.Log($"to server: {message.Intent}");
 
                 client.Send(message.RawData, message.RawData.Length, ServerEP);
             });
@@ -50,8 +58,10 @@ namespace TileBasedSurvivalGame.Networking {
 
             IPEndPoint from = new IPEndPoint(IPAddress.Any, 0);
             byte[] data = self.EndReceive(result, ref from);
+            ConnectedClients.Add(from);
 
-            NetMessage message = NetMessage.ConstructFromSent(from, data);
+            NetMessage message = new NetMessage(from, data);
+            message = NetMessage.MessageToSubtype(message);
 
             OnServerMessage(message);
 
@@ -63,7 +73,8 @@ namespace TileBasedSurvivalGame.Networking {
             IPEndPoint from = new IPEndPoint(IPAddress.Any, 0);
             byte[] data = self.EndReceive(result, ref from);
 
-            NetMessage message = NetMessage.ConstructFromSent(from, data);
+            NetMessage message = new NetMessage(from, data);
+            message = NetMessage.MessageToSubtype(message);
 
             OnClientMessage(message);
 
@@ -95,7 +106,7 @@ namespace TileBasedSurvivalGame.Networking {
                 return;
             }
 
-            Logger.Log($"fr {(message.Sender.Equals(ServerEP) ? "server" : message.Sender.ToString())} {message.MessageIntent}");
+            Logger.Log($"fr {(message.Sender.Equals(ServerEP) ? "server" : message.Sender.ToString())} {message.Intent}");
         }
     }
 }
