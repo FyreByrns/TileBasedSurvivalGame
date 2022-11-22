@@ -20,7 +20,7 @@ namespace TileBasedSurvivalGame {
 
         public override void OnCreate() {
             // default scene
-            CurrentScene = new AbstractWorldGenVisualizer();
+            CurrentScene = new NetworkTest();
             CurrentScene.Begin(this);
         }
 

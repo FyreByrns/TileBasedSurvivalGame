@@ -1,144 +1,133 @@
-﻿using System;
+﻿//#define EXCESSIVE_DEBUG_PRINTS
+
+using System;
+using System.Reflection;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using FSerialization;
 
-//// = documentation
-// = per-step working comments
-
-
 namespace TileBasedSurvivalGame.Networking {
-    delegate void NetMessageEventHandler(NetMessage message);
+    class NetMessage {
+        public IPEndPoint Sender { get; protected set; }
+        public int HeaderLength { get; protected set; }
+        public byte[] RawData { get; protected set; }
+        public int BodyLength { get; protected set; }
+        public byte[] BodyData { get; protected set; }
 
-    // wrapper around a raw set of bytes sent over the network
-    //   layout:
-    //     long   : unix timestamp sent : for determining latency
-    //     int    : intent              : the type of message
-    //     int    : message length      : number of bytes in data
-    //     -      :                     :
-    //     byte[] : data                : actual data
-    partial class NetMessage {
-        // header
-        public IPEndPoint Sender { get; private set; }
-        public DateTime Sent { get; private set; }
-        public DateTime Received { get; private set; }
-        public TimeSpan Latency => Received - Sent;
-        public Intent MessageIntent { get; private set; }
+        public string Intent { get; protected set; }
+        public DateTime Sent { get; protected set; }
 
-        // body
-        public byte[] RawData { get; set; }
-
-        // other
-        public bool Blocked { get; private set; }
-
-        #region methods
-
-        public T Get<T>(ref int readIndex) {
-            return RawData.Get<T>(ref readIndex);
+        public byte[] GetHeader() {
+            List<byte> header = new List<byte>();
+            header.Append(Sent.Ticks);
+            header.Append(Intent);
+            header.Append(BodyLength);
+            return header.ToArray();
         }
 
-        #endregion
+        protected virtual void ReadDataToFields() { }
 
-        #region operators
+        /// <summary>
+        /// Construct a NetMessage to send
+        /// </summary>
+        protected NetMessage(string intent, byte[] data) {
+            Intent = intent;
+            Sent = DateTime.Now;
+            BodyLength = data.Length;
 
-        public override bool Equals(object obj) {
-            if (obj is null) {
-                return false;
+            byte[] header = GetHeader();
+            HeaderLength = header.Length;
+            
+            RawData = new byte[HeaderLength + BodyLength];
+            Array.Copy(header, RawData, HeaderLength);
+            Array.Copy(data, 0, RawData, HeaderLength, BodyLength);
+        }
+        /// <summary>
+        /// Construct a NetMessage from network data
+        /// </summary>
+        public NetMessage(IPEndPoint sender, byte[] data) {
+            Sender = sender;
+            RawData = data;
+
+            int readIndex = 0;
+            Sent = new DateTime(data.Get<long>(ref readIndex));
+            Intent = data.Get<string>(ref readIndex);
+            BodyLength = data.Get<int>(ref readIndex);
+            HeaderLength = readIndex; // all the header data has been read now, so the read index will be the header length
+            Array.Copy(RawData, HeaderLength, BodyData, 0, BodyLength);
+        }
+
+        //// reflection stuff to generate message type data etc
+        static Dictionary<string, Type> IntentToType = new Dictionary<string, Type>();
+        
+        public static NetMessage MessageToSubtype(NetMessage rawMessage) {
+            NetMessage result = null;
+            if (IntentToType.ContainsKey(rawMessage.Intent)) {
+                result = (NetMessage)Activator.CreateInstance(IntentToType[rawMessage.Intent]);
+                result.Sender = rawMessage.Sender;
+                result.HeaderLength = rawMessage.HeaderLength;
+                result.RawData = rawMessage.RawData;
+                result.BodyLength = rawMessage.BodyLength;
+                result.BodyData = rawMessage.BodyData;
+                result.Intent = rawMessage.Intent;
+                result.Sender = rawMessage.Sender;
+                result.ReadDataToFields();
             }
-            if (ReferenceEquals(this, obj)) {
-                return true;
-            }
-            if (GetType() != obj.GetType()) {
-                return false;
-            }
-
-            // should never fail considering types are previously determined to match
-            NetMessage other = (NetMessage)obj;
-            return other.Sender == Sender
-                && other.Sent == Sent
-                && other.Received == Received
-                && other.MessageIntent == MessageIntent
-                // not currently comparing array fields for performance reasons
-                //&& other.RawData == RawData
-                //&& other.HeaderData == HeaderData
-                //&& other.BodyData == BodyData
-                && other.Blocked == Blocked;
-        }
-        public static bool operator ==(NetMessage lhs, NetMessage rhs) {
-            // hacky truthy-null
-            return lhs?.Equals(rhs) ?? (rhs?.Equals(lhs) ?? true);
-        }
-        public static bool operator !=(NetMessage lhs, NetMessage rhs) {
-            return !(lhs == rhs);
-        }
-
-        #endregion operators
-
-        #region static functionality
-
-        //// set the sender of a message (only for use with direct-piping)
-        public static void SetSender(ref NetMessage message, IPEndPoint newSender) {
-            message.Sender = newSender;
-        }
-
-        //// construct a message with just intent
-        static byte[] _emptyByteArray = new byte[] { };
-        public static NetMessage ConstructToSend(Intent intent) {
-            return ConstructToSend(intent, _emptyByteArray);
-        }
-        //// construct a message with both intent and contents
-        public static NetMessage ConstructToSend(Intent intent, byte[] data) {
-            NetMessage result = new NetMessage();
-            result.MessageIntent = intent;
-            // to send, only the raw data needed, no parsing of data
-            // .. or sender info
-            List<byte> rawDataBuf = new List<byte>();
-            rawDataBuf.Append(DateTime.Now.Ticks);
-            rawDataBuf.Append((int)intent);
-            rawDataBuf.Append(data);
-            result.RawData = rawDataBuf.ToArray();
-            return result;
-        }
-        //// construct data from raw sent byte[]
-        public static NetMessage ConstructFromSent(IPEndPoint sender, byte[] data) {
-            // discard blocked messages without parsing
-            if (BlockedEndpoints.Contains(sender)) {
-                return BlockedMessage;
-            }
-
-            NetMessage result = new NetMessage();
-            // trivial, no parsing needed
-            result.Sender = sender;
-            result.Received = DateTime.Now;
-            result.RawData = data;
-
-            // parse
-            int headerReadIndex = 0;
-            result.Sent = new DateTime(data.Get<long>(ref headerReadIndex));
-            result.MessageIntent = (Intent)data.Get<int>(ref headerReadIndex);
-            result.RawData = data.Get<byte[]>(ref headerReadIndex);
-
             return result;
         }
 
-        #endregion static functionality
-
-        #region blocking
-        public static NetMessage BlockedMessage =>
-            new NetMessage() { Blocked = true };
-
-        public static List<IPEndPoint> BlockedEndpoints { get; } = new List<IPEndPoint>();
-        public static void BlockEndpoint(IPEndPoint toBlock) {
-            if (!BlockedEndpoints.Contains(toBlock)) {
-                BlockedEndpoints.Add(toBlock);
-            }
+        protected static string GetIntentAttr<T>() where T : NetMessage {
+            Type t = typeof(T);
+            return GetIntentAttr(t);
         }
-        public static void UnblockEndpoint(IPEndPoint toUnblock) {
-            if (BlockedEndpoints.Contains(toUnblock)) {
-                BlockedEndpoints.Remove(toUnblock);
+        protected static string GetIntentAttr(Type t) {
+            foreach (Attribute attribute in t.GetCustomAttributes()) {
+                if (attribute is Intent intent) {
+                    return intent.IntentString;
+                }
             }
+            return "[none]";
         }
 
-        #endregion blocking
+        static NetMessage() {
+            IEnumerable<Type> messageTypes = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.FullName.Contains("Messages"));
+            foreach (Type messageType in messageTypes) {
+                string intent = GetIntentAttr(messageType);
+                IntentToType[intent] = messageType;
+            }
+        }
+    }
+
+    namespace Messages {
+        [ClientToServer]
+        [Intent("rc")]
+        class RequestConnection : NetMessage {
+            public RequestConnection() : base(GetIntentAttr<RequestConnection>(), Array.Empty<byte>()) { }
+        }
+
+        [ServerToClient]
+        [Intent("ac")]
+        class AllowConnection : NetMessage { 
+            public AllowConnection() : base(GetIntentAttr<AllowConnection>(), Array.Empty<byte>()) { }
+        }
+
+        [EitherToEither]
+        [Intent("msg")]
+        class Message : NetMessage {
+            public string Text { get; private set; }
+
+            protected override void ReadDataToFields() {
+                base.ReadDataToFields();
+
+                int readIndex = 0;
+                Text = BodyData.Get<string>(ref readIndex);
+            }
+
+            public Message() : base(GetIntentAttr<Message>(), Array.Empty<byte>()) { }
+            public Message(string text) : this() {
+
+            }
+        }
     }
 }

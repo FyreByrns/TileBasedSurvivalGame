@@ -5,7 +5,7 @@
         public int TicksBetweenMovement { get; set; }
         public int TickAccumulator { get; set; }
         public Location DesiredLocation { get; protected set; }
-        public virtual void Update(TiledWorld world) { }
+        public virtual void Update(World world) { }
 
         protected EntityController(Entity owner) {
             Owner = owner;

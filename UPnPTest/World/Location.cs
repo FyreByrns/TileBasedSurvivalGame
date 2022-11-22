@@ -20,18 +20,6 @@
             Dimension = dimension;
         }
 
-        //// find what chunk a global location is in
-        public static Location ToChunk(Location world) {
-            return world / Chunk.Size;
-        }
-        //// find what tile a global location is in a chunk
-        public static Location ToTile(Location world) {
-            return new Location(world.X % Chunk.Size, world.Y % Chunk.Size);
-        }
-        //// find global location from a chunk and tile location
-        public static Location ToWorld(Location chunk, Location tile) {
-            return chunk * Chunk.Size + tile;
-        }
 
         public static Location operator *(Location a, int scale) {
             return new Location(a.X * scale, a.Y * scale);
