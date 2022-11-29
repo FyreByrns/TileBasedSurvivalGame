@@ -9,17 +9,13 @@ using TileBasedSurvivalGame.World;
 namespace TileBasedSurvivalGame.Scenes {
     internal class RealizedWorldTestScene : Scene {
         //// this test scene uses an integrated server.
-        Server server;
+        Lobby server;
 
         public override string Name => "Realized World Test";
 
         public override Scene Next { get => this; protected set { } }
 
         public override void Begin(Engine instance) {
-            server = new Server();
-
-            NetHandler.Setup(System.Net.IPAddress.Parse("127.0.0.1"), 12000, true, true);
-
             // setup worlds
         }
 

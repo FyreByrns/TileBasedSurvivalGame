@@ -67,6 +67,22 @@ namespace TileBasedSurvivalGame.Networking {
 
         //// reflection stuff to generate message type data etc
         static Dictionary<string, Type> IntentToType = new Dictionary<string, Type>();
+        static HashSet<Type> ServerToClientMessages = new HashSet<Type>();
+        static HashSet<Type> ClientToServerMessages = new HashSet<Type>();
+        static Dictionary<ConnectionState, HashSet<Type>> StateLockedMessages = new Dictionary<ConnectionState, HashSet<Type>>();
+
+        public static bool ExpectedOnClient<T>()
+            where T : NetMessage {
+            return ServerToClientMessages.Contains(typeof(T));
+        }
+        public static bool ExpectedOnServer<T>()
+            where T : NetMessage {
+            return ClientToServerMessages.Contains(typeof(T));
+        }
+        public static bool ExpectedInState<T>(ConnectionState state)
+            where T : NetMessage {
+            return StateLockedMessages.ContainsKey(state) && StateLockedMessages[state].Contains(typeof(T));
+        }
 
         public static NetMessage MessageToSubtype(NetMessage rawMessage) {
             NetMessage result = null;
@@ -96,89 +112,59 @@ namespace TileBasedSurvivalGame.Networking {
             }
             return "[none]";
         }
+        protected static bool ServerToClient(Type t) {
+            foreach (Attribute attribute in t.GetCustomAttributes()) {
+                if (attribute is ServerToClient || attribute is EitherToEither) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        protected static bool ClientToServer(Type t) {
+            foreach (Attribute attribute in t.GetCustomAttributes()) {
+                if (attribute is ClientToServer || attribute is EitherToEither) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        protected static bool StateLocked(Type t) {
+            foreach (Attribute attribute in t.GetCustomAttributes()) {
+                if (attribute is State) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        protected static ConnectionState GetStateLock(Type t) {
+            foreach (Attribute attribute in t.GetCustomAttributes()) {
+                if (attribute is State state) {
+                    return state.ConnectionState;
+                }
+            }
+            return default;
+        }
 
         static NetMessage() {
             IEnumerable<Type> messageTypes = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.FullName.Contains("Messages"));
             foreach (Type messageType in messageTypes) {
                 string intent = GetIntentAttr(messageType);
                 IntentToType[intent] = messageType;
-            }
-        }
-    }
 
-    namespace Messages {
-        [ClientToServer]
-        [Intent("rc")]
-        class RequestConnection : NetMessage {
-            public RequestConnection() : base(GetIntentAttr<RequestConnection>(), Array.Empty<byte>()) { }
-        }
-
-        [ServerToClient]
-        [Intent("ac")]
-        class AllowConnection : NetMessage {
-            public int ClientID;
-
-            protected override void ReadDataToFields() {
-                base.ReadDataToFields();
-
-                int readIndex = 0;
-                ClientID = BodyData.Get<int>(ref readIndex);
-            }
-
-            public AllowConnection() : base(GetIntentAttr<AllowConnection>(), Array.Empty<byte>()) { }
-            public AllowConnection(int id) : base(GetIntentAttr<AllowConnection>(), id.FSData()) { }
-        }
-
-        [EitherToEither]
-        [Intent("msg")]
-        class TextMessage : NetMessage {
-            public string Text { get; private set; }
-            public bool FromServer { get; private set; }
-            public int OriginatingID { get; private set; }
-
-            protected override void ReadDataToFields() {
-                base.ReadDataToFields();
-
-                int readIndex = 0;
-                Text = BodyData.Get<string>(ref readIndex);
-
-                // if there's more data, it's probably from the server
-                if (readIndex != BodyData.Length) {
-                    FromServer = BodyData.Get<bool>(ref readIndex);
-                    if (FromServer) {
-                        OriginatingID = BodyData.Get<int>(ref readIndex);
-                    }
+                if (ServerToClient(messageType)) {
+                    ServerToClientMessages.Add(messageType);
                 }
-            }
-
-            public TextMessage() : base(GetIntentAttr<TextMessage>(), Array.Empty<byte>()) { }
-            public TextMessage(string text) : base(GetIntentAttr<TextMessage>(), text.FSData()) { }
-            public TextMessage(string text, int originatingID) : this(text) {
-                List<byte> moreData = new List<byte>();
-                moreData.Append(text);
-                moreData.Append(true);
-                moreData.Append(originatingID);
-                SetupData(moreData.ToArray());
-            }
-        }
-
-        [ServerToClient]
-        [Intent("plist")]
-        class PlayerList : NetMessage {
-            public int[] IDs { get; private set; }
-
-            protected override void ReadDataToFields() {
-                base.ReadDataToFields();
-
-                int readIndex = 0;
-                IDs = BodyData.Get<int[]>(ref readIndex);
-            }
-
-            public PlayerList() : base(GetIntentAttr<PlayerList>(), Array.Empty<byte>()) { }
-            public PlayerList(params int[] ids) : this() {
-                List<byte> data = new List<byte>();
-                data.Append(ids);
-                SetupData(data.ToArray());
+                if (ClientToServer(messageType)) {
+                    ClientToServerMessages.Add(messageType);
+                }
+                if (StateLocked(messageType)) {
+                    ConnectionState state = GetStateLock(messageType);
+                    if (!StateLockedMessages.ContainsKey(state)) {
+                        StateLockedMessages[state] = new HashSet<Type>();
+                    }
+                    StateLockedMessages[state].Add(messageType);
+                }
             }
         }
     }

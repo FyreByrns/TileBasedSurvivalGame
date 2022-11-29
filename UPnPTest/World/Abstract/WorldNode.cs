@@ -4,9 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Pixel = PixelEngine.Pixel;
+using static TileBasedSurvivalGame.World.Abstract.WorldNodeType;
+
 namespace TileBasedSurvivalGame.World.Abstract {
     enum WorldNodeType {
         None,
+
+        PossibleSpawnLocation,
 
         Coastline,
     }
@@ -22,6 +27,7 @@ namespace TileBasedSurvivalGame.World.Abstract {
         public bool PositionLocked { get; set; }
         public WorldNodeType Type;
         public float EffectRadius;
+        public float EffectFalloff;
 
         public HashSet<WorldNode> ConnectedNodes { get; private set; }
 
@@ -51,6 +57,15 @@ namespace TileBasedSurvivalGame.World.Abstract {
                 foreach (WorldNode node in ConnectedNodes.ToArray()) {
                     Disconnect(node);
                 }
+            }
+        }
+
+        public Pixel GetEffectColour() {
+            switch (Type) {
+                case PossibleSpawnLocation: return new Pixel(255, 0, 0);
+
+                case None: 
+                default: return Pixel.Empty;
             }
         }
     }

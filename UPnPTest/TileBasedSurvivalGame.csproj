@@ -46,9 +46,16 @@
   <ItemGroup>
     <Compile Include="Config.cs" />
     <Compile Include="ImmediateModeGui.cs" />
+    <Compile Include="Networking\Lobby\ClientsideLobby.cs" />
+    <Compile Include="Networking\Messages\AllowConnection.cs" />
     <Compile Include="Networking\NetAttributes.cs" />
     <Compile Include="Networking\NetMessage.cs" />
-    <Compile Include="Networking\Server.cs" />
+    <Compile Include="Networking\Lobby\Lobby.cs" />
+    <Compile Include="Networking\Messages\RequestConnection.cs" />
+    <Compile Include="Networking\Messages\PlayerList.cs" />
+    <Compile Include="Networking\Messages\TextMessage.cs" />
+    <Compile Include="Networking\Lobby\ServersideLobby.cs" />
+    <Compile Include="Networking\UserData.cs" />
     <Compile Include="Scenes\AbstractWorldGenVisualizer.cs" />
     <Compile Include="Engine.cs" />
     <Compile Include="InputHandler.cs" />

@@ -4,16 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using TileBasedSurvivalGame.World.Abstract;
+using TileBasedSurvivalGame.World.Realized;
+
 namespace TileBasedSurvivalGame.World {
     class World {
-        #region entity stuff
+        public AbstractWorld AbstractWorld { get; }
+        public RealizedWorld RealizedWorld { get; }
 
-        public QuadTree<Entity, EntityPositioner> Entities { get; }
+        public QuadTree<Entity, EntityPositioner> Entities => AbstractWorld.Entities;
 
+        #region ===== Entity Stuff =====
         public void Spawn(Entity entity) { }
-
         public bool HasEntityWithFlag(string flag, AABB region = null) {
-            if(region == null) {
+            if (region == null) {
                 region = Entities.Bounds;
             }
             foreach (Entity entity in Entities.GetWithinRect(region.TopLeft, region.BottomRight)) {
@@ -32,15 +36,23 @@ namespace TileBasedSurvivalGame.World {
                 }
             }
         }
-
-        #endregion entity stuff
-
+        #endregion
+        #region =====  Tile Stuff  =====
         public void SetTile(Location location, Tile tile) { }
+        public TerrainTile GetTile(Location location) {
+            if (RealizedWorld.TerrainExistsAt(location)) {
+                return RealizedWorld.GetTerrainAt(location);
+            }
+            return default;
+        }
+        #endregion
+
 
         public void Tick(Engine context) { }
 
         public World(int size) {
-            Entities = new QuadTree<Entity, EntityPositioner>(new AABB((-size, -size), (size, size)));
+            AbstractWorld = new AbstractWorld(size);
+            RealizedWorld = new RealizedWorld(size);
         }
     }
 

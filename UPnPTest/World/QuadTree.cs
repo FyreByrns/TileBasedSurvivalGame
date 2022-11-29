@@ -189,6 +189,17 @@ namespace TileBasedSurvivalGame.World {
                 }
             }
         }
+        public IEnumerable<T> GetWithinRadius(Vector2 point, float radius) {
+            // query in the square which the circle circumscribes
+            foreach(T item in GetWithinRect(point - radius, point + radius)) {
+                // basic point / circle intersection
+                float radiusSquared = radius * radius;
+                Vector2 itemPos = Positioner.GetPosition(item);
+                if((itemPos - point).Length2 <= radiusSquared) {
+                    yield return item;
+                }
+            }
+        }
 
         public QuadTree(AABB bounds) {
             Bounds = bounds;

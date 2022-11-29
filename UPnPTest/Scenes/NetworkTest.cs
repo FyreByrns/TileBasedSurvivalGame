@@ -6,107 +6,55 @@ using System.Threading.Tasks;
 using TileBasedSurvivalGame.Networking;
 using TileBasedSurvivalGame.Networking.Messages;
 
+using PixelEngine;
+
 using IPEndPoint = System.Net.IPEndPoint;
+using im = TileBasedSurvivalGame.ImmediateModeGui;
 
 namespace TileBasedSurvivalGame.Scenes {
     internal class NetworkTest : Scene {
-        Random rng = new Random();
-
-        public override string Name => "Network Test [local server]";
+        public override string Name => "Network Test";
         public override Scene Next { get => this; protected set { } }
 
-        public Dictionary<IPEndPoint, UserData> ConnectedClients { get; }
-        = new Dictionary<IPEndPoint, UserData>();
-        public Dictionary<int, UserData> RemotePlayers { get; }
-        = new Dictionary<int, UserData>();
-
-        int ClientID { get; set; }
-        int GetConnectedClientID(IPEndPoint endpoint) {
-            if (ConnectedClients.ContainsKey(endpoint)) {
-                return ConnectedClients[endpoint].ID;
-            }
-            return -1;
-        }
-        bool AlreadyConnected(IPEndPoint endpoint) {
-            return ConnectedClients.ContainsKey(endpoint);
-        }
-        void RegisterNewConnection(IPEndPoint endpoint) {
-            ConnectedClients[endpoint] = new UserData();
-            ConnectedClients[endpoint].ID = rng.Next();
-        }
+        public Lobby Lobby { get; private set; }
 
         public override void Begin(Engine instance) {
-            Console.WriteLine("is this instance a host?");
-            bool host = Console.ReadKey().Key == ConsoleKey.Y;
-
-            Logger.ShowLogs = true;
-            NetHandler.Setup(System.Net.IPAddress.Parse("127.0.0.1"), 12000, true, host);
-
-            NetHandler.ServerMessage += ServerMessageReceived;
-            NetHandler.ClientMessage += ClientMessageReceived;
-
-            NetHandler.SendToServer(new RequestConnection());
-        }
-
-        private void ClientMessageReceived(NetMessage message) {
-            if (message is AllowConnection ac) {
-                ClientID = ac.ClientID;
-                Logger.Log($"server accepted connection! my ID is {ClientID}");
-                NetHandler.SendToServer(new TextMessage("hi! I am the client."));
-            }
-
-            if (message is TextMessage textMessage) {
-                if (textMessage.OriginatingID == ClientID) {
-                    Logger.Log("e");
-                }
-                else {
-                    Logger.Log($"c rcv {textMessage.Text}");
-                }
-            }
-
-            if (message is PlayerList playerList) {
-                foreach (int id in playerList.IDs) {
-                    if(id == ClientID) {
-                        continue;
-                    }
-
-                    Logger.Log($"new connection: \t{id}");
-                    RemotePlayers[id] = new UserData();
-                    RemotePlayers[id].ID = id;
-                }
-            }
-        }
-
-        private void ServerMessageReceived(NetMessage message) {
-            if (message is RequestConnection) {
-                if (!AlreadyConnected(message.Sender)) {
-                    RegisterNewConnection(message.Sender);
-                    NetHandler.SendToClient(message.Sender, new AllowConnection(GetConnectedClientID(message.Sender)));
-
-                    // send list of already connected clients
-                    List<int> ids = new List<int>();
-                    foreach (UserData data in ConnectedClients.Values) {
-                        ids.Add(data.ID);
-                    }
-                    NetHandler.SendToClient(message.Sender, new PlayerList(ids.ToArray()));
-
-                    // inform all of new client
-                    NetHandler.SendToAllClients(new PlayerList(GetConnectedClientID(message.Sender)));
-                }
-
-            }
-
-            if (message is TextMessage textMessage) {
-                Logger.Log($"s rcv {textMessage.Text} [{textMessage.OriginatingID}]");
-                NetHandler.SendToAllClients(new TextMessage(textMessage.Text, GetConnectedClientID(message.Sender)));
-            }
         }
 
         public override void Render(Engine instance) {
+            if (Lobby == null) {
+                bool server = im.Button(instance, 10, 10, "host");
+                bool client = im.Button(instance, 10, 23, "client only");
+
+                if (server || client) {
+                    Lobby = new Lobby(true, server);
+                }
+                return;
+            }
+
+            instance.Clear(Pixel.Presets.Grey);
+            if (Lobby.Client) {
+                instance.FillCircle(new Point(4, 4), 4, Pixel.Presets.Green);
+            }
+            if (Lobby.Server) {
+                instance.FillCircle(new Point(13, 4), 4, Pixel.Presets.Blue);
+            }
+            instance.DrawText(new Point(20, 1), Lobby?.RemotePlayers?.Count.ToString() ?? "[nul]", Pixel.Presets.Black);
+            instance.DrawText(new Point(1, 10), Lobby?.ClientID.ToString(), Pixel.Presets.Black);
         }
 
+        bool t = true;
         public override void Tick(Engine instance) {
-            NetHandler.SendToServer(new TextMessage(Console.ReadLine()));
+            if (t && Lobby != null) {
+                Lobby.ServerWorld.AbstractWorld.Nodes.Add(new World.Abstract.WorldNode() {
+                    Position = (-10, -10),
+                    EffectRadius = 40,
+                    EffectFalloff = 1f
+                });
+
+                Lobby.ServerWorld.RealizedWorld.GenerateTerrainInRect(instance, Lobby.ServerWorld.AbstractWorld, new World.AABB((-255, -255), (255, 255)));
+                t = false;
+            }
         }
 
         public override void Update(Engine instance, float elapsed) {
