@@ -8,8 +8,8 @@ namespace TileBasedSurvivalGame.Networking {
     namespace Messages {
         [State(ConnectionState.Setup)]
         [ClientToServer]
-        [Intent("rqn")]
-        class RequestName : NetMessage {
+        [Intent("setn")]
+        class SetName : NetMessage {
             public string Name;
 
             protected override void ReadDataToFields() {
@@ -19,8 +19,8 @@ namespace TileBasedSurvivalGame.Networking {
                 Name = BodyData.Get<string>(ref readIndex);
             }
 
-            public RequestName() : base(GetIntentAttr<RequestName>(), Array.Empty<byte>()) { }
-            public RequestName(string name) : base(GetIntentAttr<RequestName>(), name.FSData()) { }
+            public SetName() : base(GetIntentAttr<SetName>(), Array.Empty<byte>()) { }
+            public SetName(string name) : base(GetIntentAttr<SetName>(), name.FSData()) { }
         }
     }
 }

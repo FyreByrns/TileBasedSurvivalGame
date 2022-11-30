@@ -141,6 +141,10 @@ namespace FSerialization {
                         me.Append<int>((int)o);
                         break;
                     }
+                case STRING: {
+                        me.Append<string>((string)o);
+                        break;
+                    }
             }
         }
 

@@ -48,8 +48,9 @@
     <Compile Include="ImmediateModeGui.cs" />
     <Compile Include="Networking\Lobby\ClientsideLobby.cs" />
     <Compile Include="Networking\Messages\AllowConnection.cs" />
-    <Compile Include="Networking\Messages\RequestName.cs" />
-    <Compile Include="Networking\Messages\SendName.cs" />
+    <Compile Include="Networking\Messages\DisallowName.cs" />
+    <Compile Include="Networking\Messages\SetName.cs" />
+    <Compile Include="Networking\Messages\NamesList.cs" />
     <Compile Include="Networking\NetAttributes.cs" />
     <Compile Include="Networking\NetMessage.cs" />
     <Compile Include="Networking\Lobby\Lobby.cs" />

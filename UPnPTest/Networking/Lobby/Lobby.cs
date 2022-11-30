@@ -33,6 +33,7 @@ namespace TileBasedSurvivalGame.Networking {
             Server = server;
             if (client) {
                 NetHandler.ClientMessage += ClientMessageReceived;
+                ClientData = new UserData();
                 ClientsideLobbyState = new ClientsideLobbyState();
             }
             if (server) {

@@ -40,11 +40,16 @@ namespace TileBasedSurvivalGame.Scenes {
                 instance.FillCircle(new Point(13, 4), 4, Pixel.Presets.Blue);
             }
             instance.DrawText(new Point(20, 1), Lobby?.RemotePlayers?.Count.ToString() ?? "[nul]", Pixel.Presets.Black);
-            instance.DrawText(new Point(1, 10), Lobby?.ClientID.ToString(), Pixel.Presets.Black);
+            instance.DrawText(new Point(1, 10), Lobby?.ClientData.ID.ToString(), Pixel.Presets.Black);
+            instance.DrawText(new Point(1, 17), Lobby?.ClientData.Name, Pixel.Presets.Black);
         }
 
-        bool t = true;
+        bool t = false;
         public override void Tick(Engine instance) {
+            if (!t && Lobby != null && string.IsNullOrEmpty(Lobby.ClientData.Name)) {
+                NetHandler.SendToServer(new SetName(Console.ReadLine()));
+                t = true;
+            }
         }
 
         public override void Update(Engine instance, float elapsed) {

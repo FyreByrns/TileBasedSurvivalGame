@@ -10,23 +10,23 @@ namespace TileBasedSurvivalGame.Networking {
         [State(ConnectionState.Setup)]
         [ServerToClient]
         [Intent("aln")]
-        class SendName : NetMessage {
-            public int ClientID;
-            public string Name;
+        class NamesList : NetMessage {
+            public int[] ClientIDs;
+            public string[] Names;
 
             protected override void ReadDataToFields() {
                 base.ReadDataToFields();
 
                 int readIndex = 0;
-                ClientID = BodyData.Get<int>(ref readIndex);
-                Name = BodyData.Get<string>(ref readIndex);
+                ClientIDs = BodyData.Get<int[]>(ref readIndex);
+                Names = BodyData.Get<string[]>(ref readIndex);
             }
 
-            public SendName() : base(GetIntentAttr<SendName>(), Array.Empty<byte>()) { }
-            public SendName(int id, string name) : this() {
+            public NamesList() : base(GetIntentAttr<NamesList>(), Array.Empty<byte>()) { }
+            public NamesList(int[] ids, string[] names) : this() {
                 List<byte> data = new List<byte>();
-                data.Append(id);
-                data.Append(name);
+                data.Append(ids);
+                data.Append(names);
                 SetupData(data.ToArray());
             }
         }
