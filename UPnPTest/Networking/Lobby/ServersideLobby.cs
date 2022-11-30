@@ -10,48 +10,63 @@ using TileBasedSurvivalGame.World;
 
 namespace TileBasedSurvivalGame.Networking {
     partial class Lobby {
+        public ServersideLobbyState ServersideLobbyState { get; }
+
         public Dictionary<IPEndPoint, UserData> ConnectedClients { get; }
         = new Dictionary<IPEndPoint, UserData>();
 
         public World.World ServerWorld { get; set; }
 
-        int GetConnectedClientID(IPEndPoint endpoint) {
+        public int GetConnectedClientID(IPEndPoint endpoint) {
             if (ConnectedClients.ContainsKey(endpoint)) {
                 return ConnectedClients[endpoint].ID;
             }
             return -1;
         }
-        bool AlreadyConnected(IPEndPoint endpoint) {
+        public bool AlreadyConnected(IPEndPoint endpoint) {
             return ConnectedClients.ContainsKey(endpoint);
         }
-        void RegisterNewConnection(IPEndPoint endpoint) {
+        public void RegisterNewConnection(IPEndPoint endpoint) {
             ConnectedClients[endpoint] = new UserData();
             ConnectedClients[endpoint].ID = Random.Next();
         }
 
         private void ServerMessageReceived(NetMessage message) {
-            if (message is RequestConnection) {
-                if (!AlreadyConnected(message.Sender)) {
-                    RegisterNewConnection(message.Sender);
-                    NetHandler.SendToClient(message.Sender, new AllowConnection(GetConnectedClientID(message.Sender)));
+            ServersideLobbyState.HandleMessage(message, this);
+        }
+    }
+
+    class ServersideLobbyState : LobbyState {
+        public override Dictionary<Type, NetMessageHandler> MessageHandlers => new Dictionary<Type, NetMessageHandler>() {
+            { typeof(RequestConnection), (m, l, s) => {
+                var rc = (RequestConnection)m;
+                if (!l.AlreadyConnected(rc.Sender)) {
+                    l.RegisterNewConnection(rc.Sender);
+                    NetHandler.SendToClient(rc.Sender, new AllowConnection(l.GetConnectedClientID(rc.Sender)));
 
                     // send list of already connected clients
                     List<int> ids = new List<int>();
-                    foreach (UserData data in ConnectedClients.Values) {
+                    foreach (UserData data in l.ConnectedClients.Values) {
                         ids.Add(data.ID);
                     }
-                    NetHandler.SendToClient(message.Sender, new PlayerList(ids.ToArray()));
+                    NetHandler.SendToClient(rc.Sender, new PlayerList(ids.ToArray()));
 
                     // inform all of new client
-                    NetHandler.SendToAllClients(new PlayerList(GetConnectedClientID(message.Sender)));
+                    NetHandler.SendToAllClients(new PlayerList(l.GetConnectedClientID(rc.Sender)));
                 }
+            } },
+            { typeof(TextMessage), (m, l, s) => { 
+                var tm = (TextMessage)m;
+                Logger.Log($"s rcv {tm.Text} [{tm.OriginatingID}]");
+                NetHandler.SendToAllClients(new TextMessage(tm.Text, l.GetConnectedClientID(tm.Sender)));
+            } },
+        };
 
+        public override bool ExpectingMessageOfType(Type t) {
+            if (!NetMessage.ExpectedOnServer(t)) {
+                return false;
             }
-
-            if (message is TextMessage textMessage) {
-                Logger.Log($"s rcv {textMessage.Text} [{textMessage.OriginatingID}]");
-                NetHandler.SendToAllClients(new TextMessage(textMessage.Text, GetConnectedClientID(message.Sender)));
-            }
+            return true;
         }
     }
 }

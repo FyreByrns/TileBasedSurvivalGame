@@ -5,6 +5,7 @@ using System;
 namespace TileBasedSurvivalGame.Networking {
 
     namespace Messages {
+        [State(ConnectionState.Setup)]
         [ClientToServer]
         [Intent("rc")]
         class RequestConnection : NetMessage {

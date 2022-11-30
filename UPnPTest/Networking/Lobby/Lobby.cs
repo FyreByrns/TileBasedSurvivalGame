@@ -33,10 +33,12 @@ namespace TileBasedSurvivalGame.Networking {
             Server = server;
             if (client) {
                 NetHandler.ClientMessage += ClientMessageReceived;
+                ClientsideLobbyState = new ClientsideLobbyState();
             }
             if (server) {
                 NetHandler.ServerMessage += ServerMessageReceived;
                 ServerWorld = new World.World(100);
+                ServersideLobbyState = new ServersideLobbyState();
             }
 
             Logger.ShowLogs = true;
@@ -46,7 +48,19 @@ namespace TileBasedSurvivalGame.Networking {
     }
 
     abstract class LobbyState {
+        public delegate void NetMessageHandler(NetMessage message, Lobby lobby, LobbyState state);
         public ConnectionState State { get; set; }
-        public abstract bool ExpectingMessageOfType<T>() where T : NetMessage;
+        public bool ExpectingMessageOfType<T>() { return ExpectingMessageOfType(typeof(T)); }
+        public abstract bool ExpectingMessageOfType(Type t);
+
+        public abstract Dictionary<Type, NetMessageHandler> MessageHandlers { get; }
+
+        public void HandleMessage(NetMessage message, Lobby lobby) {
+            var msg = NetMessage.MessageToSubtype(message);
+            Type subtype = msg.GetType();
+            if (ExpectingMessageOfType(subtype) && MessageHandlers.ContainsKey(subtype)) {
+                MessageHandlers[subtype](msg, lobby, this);
+            }
+        }
     }
 }

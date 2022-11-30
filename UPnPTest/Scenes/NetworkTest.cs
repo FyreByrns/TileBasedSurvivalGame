@@ -45,16 +45,6 @@ namespace TileBasedSurvivalGame.Scenes {
 
         bool t = true;
         public override void Tick(Engine instance) {
-            if (t && Lobby != null) {
-                Lobby.ServerWorld.AbstractWorld.Nodes.Add(new World.Abstract.WorldNode() {
-                    Position = (-10, -10),
-                    EffectRadius = 40,
-                    EffectFalloff = 1f
-                });
-
-                Lobby.ServerWorld.RealizedWorld.GenerateTerrainInRect(instance, Lobby.ServerWorld.AbstractWorld, new World.AABB((-255, -255), (255, 255)));
-                t = false;
-            }
         }
 
         public override void Update(Engine instance, float elapsed) {

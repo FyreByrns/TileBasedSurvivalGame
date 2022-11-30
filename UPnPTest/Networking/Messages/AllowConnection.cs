@@ -6,6 +6,7 @@ using FSerialization;
 namespace TileBasedSurvivalGame.Networking {
 
     namespace Messages {
+        [State(ConnectionState.Setup)]
         [ServerToClient]
         [Intent("ac")]
         class AllowConnection : NetMessage {

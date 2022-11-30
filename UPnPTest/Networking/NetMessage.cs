@@ -73,15 +73,24 @@ namespace TileBasedSurvivalGame.Networking {
 
         public static bool ExpectedOnClient<T>()
             where T : NetMessage {
-            return ServerToClientMessages.Contains(typeof(T));
+            return ExpectedOnClient(typeof(T));
+        }
+        public static bool ExpectedOnClient(Type t) {
+            return ServerToClientMessages.Contains(t);
         }
         public static bool ExpectedOnServer<T>()
             where T : NetMessage {
-            return ClientToServerMessages.Contains(typeof(T));
+            return ExpectedOnServer(typeof(T));
+        }
+        public static bool ExpectedOnServer(Type t) {
+            return ClientToServerMessages.Contains(t);
         }
         public static bool ExpectedInState<T>(ConnectionState state)
             where T : NetMessage {
-            return StateLockedMessages.ContainsKey(state) && StateLockedMessages[state].Contains(typeof(T));
+            return ExpectedInState(state, typeof(T));
+        }
+        public static bool ExpectedInState(ConnectionState state, Type t) {
+            return StateLockedMessages.ContainsKey(state) && StateLockedMessages[state].Contains(t);
         }
 
         public static NetMessage MessageToSubtype(NetMessage rawMessage) {
