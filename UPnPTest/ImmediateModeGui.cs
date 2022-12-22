@@ -108,5 +108,42 @@ namespace TileBasedSurvivalGame {
 
             context.FillCircle(handleLoc, handleSize, ContentColour);
         }
+
+        public static bool InputBox(Engine context, int x, int y, string query, ref string state, int margin = 2, int scale = 1, Key enterKey = Key.Enter) {
+            Vector2 topLeft = (x, y);
+            Vector2 queryLocation = topLeft + (margin, margin);
+            Vector2 entryLocation = topLeft + (margin, TextSize(query, margin, scale).y);
+            Vector2 bottomRight = topLeft + TextSize(query.Length > state.Length ? query : state, margin, scale) * (1, 2); // twice as tall
+
+            context.FillRect(topLeft, bottomRight, BackgroundColour);
+            context.DrawText(queryLocation, query, ContentColour);
+            context.DrawText(entryLocation, state, ContentColour);
+            context.DrawRect(topLeft, bottomRight, BorderColour);
+
+            if (context.GetKey(Key.Any).Pressed) {
+                for(Key key = Key.A; key <= Key.K9; key++) {
+                    if (context.GetKey(key).Pressed) {
+                        state += context.GetChar(key);
+                    }
+                }
+                for (Key key = Key.OEM_1; key <= Key.OEM_PERIOD; key++) {
+                    if (context.GetKey(key).Pressed) {
+                        state += context.GetChar(key);
+                    }
+                }
+
+                if (context.GetKey(Key.Space).Pressed) {
+                    state += " ";
+                }
+
+                if (context.GetKey(Key.Back).Pressed) {
+                    if (state.Length > 0) {
+                        state = state.Substring(0, state.Length - 1);
+                    }
+                }
+            }
+            
+            return context.GetKey(enterKey).Pressed;
+        }
     }
 }
