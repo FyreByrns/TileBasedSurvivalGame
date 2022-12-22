@@ -21,7 +21,7 @@ namespace TileBasedSurvivalGame {
             return ((text.Length * textPixelSize) + margin * 2, newlinesInText * (textPixelSize + (margin * 2)));
         }
 
-        public static bool Button(Engine context, int x, int y, string text, int width = 0, int height = 0, int margin = 2, int scale = 1) {
+        public static bool Button(Game context, int x, int y, string text, int width = 0, int height = 0, int margin = 2, int scale = 1) {
             int textPixelSize = 8 * scale;
 
             // if dimensions are zero, autogenerate them from text
@@ -54,7 +54,7 @@ namespace TileBasedSurvivalGame {
             return false;
         }
 
-        public static bool EnumDropdown<T>(Engine context, int x, int y, ref T selection, ref bool hovered, int margin = 2, int scale = 1) {
+        public static bool EnumDropdown<T>(Game context, int x, int y, ref T selection, ref bool hovered, int margin = 2, int scale = 1) {
             int textPixelSize = 8 * scale;
             int width = 0;
             int height = textPixelSize + margin * 2;
@@ -85,7 +85,7 @@ namespace TileBasedSurvivalGame {
             return false;
         }
 
-        public static void Slider(Engine context, int x, int y, int width, int height, float minValue, float maxValue, ref float value, int handleSize = 3, int margin = 2) {
+        public static void Slider(Game context, int x, int y, int width, int height, float minValue, float maxValue, ref float value, int handleSize = 3, int margin = 2) {
             Vector2 topLeft = (x, y);
             Vector2 bottomRight = (x + width, y + height);
 
@@ -109,7 +109,7 @@ namespace TileBasedSurvivalGame {
             context.FillCircle(handleLoc, handleSize, ContentColour);
         }
 
-        public static bool InputBox(Engine context, int x, int y, string query, ref string state, int margin = 2, int scale = 1, Key enterKey = Key.Enter) {
+        public static bool InputBox(Game context, int x, int y, string query, ref string state, int margin = 2, int scale = 1, Key enterKey = Key.Enter) {
             Vector2 topLeft = (x, y);
             Vector2 queryLocation = topLeft + (margin, margin);
             Vector2 entryLocation = topLeft + (margin, TextSize(query, margin, scale).y);

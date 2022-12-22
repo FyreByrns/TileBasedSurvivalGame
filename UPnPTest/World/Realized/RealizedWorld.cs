@@ -9,13 +9,23 @@ using TileBasedSurvivalGame.World.Abstract;
 
 namespace TileBasedSurvivalGame.World.Realized {
     class RealizedWorld {
-        QuadTree<TerrainTile, TerrainTile.TerrainTilePositioner> Terrain { get; }
+        List<Chunk> Terrain = new List<Chunk> ();
 
         public bool TerrainExistsAt(Location location) {
-            return Terrain.GetWithinRect((location.X, location.Y), (location.X, location.Y)).Count() > 0;
+            foreach (Chunk chunk in Terrain) {
+                if (chunk.WithinBounds(location)) {
+                    return chunk.TileExists(location);
+                }
+            }
+            return false;
         }
         public TerrainTile GetTerrainAt(Location location) {
-            return Terrain.GetWithinRect((location.X, location.Y), (location.X, location.Y)).First() ?? default;
+            foreach (Chunk chunk in Terrain) {
+                if (chunk.WithinBounds(location)) {
+                    return chunk.GetTile(location);
+                }
+            }
+            return null;
         }
 
         //// generate a rectangle of terrain from an abstract world
@@ -52,7 +62,48 @@ namespace TileBasedSurvivalGame.World.Realized {
         }
 
         public RealizedWorld(int size) {
-            Terrain = new QuadTree<TerrainTile, TerrainTile.TerrainTilePositioner>(new AABB((-size, -size), (size, size)));
+        }
+    }
+
+    class Chunk {
+        public const int Width = 10;
+        public const int Height = 10;
+
+        // position of the chunk within the world
+        public Location Location;
+        public Dictionary<Location, TerrainTile> Tiles { get; } = new Dictionary<Location, TerrainTile>();
+
+        public bool WithinBounds(Location worldLocation) {
+            return worldLocation.X - Location.X < Width && worldLocation.Y - Location.Y < Height;
+        }
+        public Location ToLocal(Location worldLocation) {
+            return new Location(worldLocation.X - Location.X, worldLocation.Y - Location.Y);
+        }
+        public Location ToGlobal(Location localLocation) {
+            return new Location(Location.X + localLocation.X, Location.Y + localLocation.Y);
+        }
+
+        public bool TileExists(Location worldLocation) {
+            if (WithinBounds(worldLocation)) {
+                return Tiles.ContainsKey(ToLocal(worldLocation));
+            }
+            return false;
+        }
+        public void SetTile(Location worldLocation, TerrainTile tile) {
+            if (WithinBounds(worldLocation)) {
+                Tiles[ToLocal(worldLocation)] = tile;
+            }
+        }
+        public TerrainTile GetTile(Location worldLocation) {
+            if (TileExists(worldLocation)) {
+                return Tiles[ToLocal(worldLocation)];
+            }
+            return null;
+        }
+        public void RemoveTile(Location worldLocation, TerrainTile tile) {
+            if (WithinBounds(worldLocation) && Tiles.ContainsKey(ToLocal(worldLocation))) {
+                Tiles.Remove(ToLocal(worldLocation));
+            }
         }
     }
 
@@ -64,5 +115,8 @@ namespace TileBasedSurvivalGame.World.Realized {
             }
         }
         public Location Location;
+
+        public HashSet<Entity> Entities { get; }
+         = new HashSet<Entity>();
     }
 }

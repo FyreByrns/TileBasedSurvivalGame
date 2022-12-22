@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Vector2 = PixelEngine.Vector2;
 
 namespace TileBasedSurvivalGame.World {
     /// <summary>

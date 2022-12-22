@@ -54,6 +54,9 @@ namespace TileBasedSurvivalGame.Networking {
                     NetHandler.SendToClient(rc.Sender, new PlayerList(ids.ToArray()));
                     NetHandler.SendToClient(rc.Sender, new NamesList(ids.ToArray(), names.ToArray()));
 
+                    // send world
+
+
                     // inform all of new client
                     NetHandler.SendToAllClients(new PlayerList(l.GetConnectedClientID(rc.Sender)));
                 }

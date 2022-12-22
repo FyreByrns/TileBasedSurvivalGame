@@ -39,6 +39,7 @@ namespace TileBasedSurvivalGame.Networking {
             if (server) {
                 NetHandler.ServerMessage += ServerMessageReceived;
                 ServerWorld = new World.World(100);
+                ServerWorld.SetTile(new World.Location(3, 3), new World.Tile() { Type = "test" });
                 ServersideLobbyState = new ServersideLobbyState();
             }
 

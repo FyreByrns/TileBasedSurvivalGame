@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using TileBasedSurvivalGame.World.Abstract;
 using TileBasedSurvivalGame.World.Realized;
+using Vector2 = PixelEngine.Vector2;
 
 namespace TileBasedSurvivalGame.World {
     class World {

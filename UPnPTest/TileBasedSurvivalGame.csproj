@@ -75,7 +75,6 @@
     <Compile Include="Scenes\NetworkTest.cs" />
     <Compile Include="Scenes\RealizedWorldTestScene.cs" />
     <Compile Include="Scenes\Scene.cs" />
-    <Compile Include="Vector2.cs" />
     <Compile Include="World\AABB.cs" />
     <Compile Include="World\Abstract\AbstractWorld.cs" />
     <Compile Include="World\Abstract\WorldNode.cs" />
