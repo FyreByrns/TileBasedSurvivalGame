@@ -21,6 +21,8 @@ namespace TileBasedSurvivalGame.Scenes {
         public override void Begin(Engine instance) {
         }
 
+        bool nameSet = false;
+        string nameInProgress = "";
         public override void Render(Engine instance) {
             if (Lobby == null) {
                 bool server = im.Button(instance, 10, 10, "host");
@@ -42,14 +44,18 @@ namespace TileBasedSurvivalGame.Scenes {
             instance.DrawText(new Point(20, 1), Lobby?.RemotePlayers?.Count.ToString() ?? "[nul]", Pixel.Presets.Black);
             instance.DrawText(new Point(1, 10), Lobby?.ClientData.ID.ToString(), Pixel.Presets.Black);
             instance.DrawText(new Point(1, 17), Lobby?.ClientData.Name, Pixel.Presets.Black);
+
+            // handle name setting
+            if (!nameSet && Lobby != null) {
+                if (im.InputBox(instance, 10, 10, "name: ", ref nameInProgress) && nameInProgress.Length > 0) {
+                    NetHandler.SendToServer(new SetName(nameInProgress));
+                    nameSet = true;
+                }
+            }
         }
 
-        bool t = false;
         public override void Tick(Engine instance) {
-            if (!t && Lobby != null && string.IsNullOrEmpty(Lobby.ClientData.Name)) {
-                NetHandler.SendToServer(new SetName(Console.ReadLine()));
-                t = true;
-            }
+
         }
 
         public override void Update(Engine instance, float elapsed) {
